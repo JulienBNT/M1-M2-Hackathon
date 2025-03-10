@@ -1,5 +1,4 @@
 const User = require("../models/userModel");
-
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
@@ -89,5 +88,51 @@ const loginUser = async (req, res) => {
   }
 };
 
+const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(400).json({ error: "Error fetching user profile" });
+  }
+};
 
-module.exports = { registerUser, loginUser};
+const updateUserProfile = async (req, res) => {
+  try {
+    const { username, password, confirmPassword } = req.body;
+
+    if (password && password !== confirmPassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
+    const updates = {};
+    if (username) updates.username = username;
+    if (password) updates.password = await bcrypt.hash(password, 10);
+
+    const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true }).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(400).json({ error: "Error updating user profile" });
+  }
+};
+
+const deleteUserAccount = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json({ message: "User account deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ error: "Error deleting user account" });
+  }
+};
+
+module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, deleteUserAccount };
