@@ -31,7 +31,7 @@ CHOIX DU DATASET :
                 Moins précis (biais et images bruitées).
 
     RECOMMANDATIONS
-        1 -> Sélectionner un sous-ensemble d’AffectNet7 (ex: 4 000 images par émotion).
+        1 -> Sélectionner un sous-ensemble d’AffectNet7.
         3 -> Si le temps manque, faire un fine-tuning du modèle sur FER2013 puis réajuster sur AffectNet7.
 
 
