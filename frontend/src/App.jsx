@@ -11,6 +11,7 @@ import LoginPage from "@/components/pages/Authentication/Login/LoginPage.jsx";
 import RegisterPage from "@pages/Authentication/Register/RegisterPage.jsx";
 import NotFoundPage from "@pages/error/NotFoundPage.jsx";
 import Layout from "@/components/Layout/Layout.jsx";
+import Home from "@pages/Home/Home.jsx";
 const App = () => {
   return (
     <Router>
@@ -24,7 +25,9 @@ const App = () => {
           <Route path="/register" element={<RegisterPage />} />
 
           {/* Routes protégées */}
-          <Route path="/" element={<Layout />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+          </Route>
 
           {/* Erreur 404 */}
           <Route path="*" element={<NotFoundPage />} />
