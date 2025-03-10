@@ -1,35 +1,37 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
-function App() {
-  const [count, setCount] = useState(0)
-
+// App.jsx
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "@/components/contexts/AuthContext.jsx";
+// import ProtectedRoute from "./ProtectedRoute";
+import LoginPage from "@/components/pages/Authentication/Login/LoginPage.jsx";
+import RegisterPage from "@pages/Authentication/Register/RegisterPage.jsx";
+import NotFoundPage from "@pages/error/NotFoundPage.jsx";
+import Layout from "@/components/Layout/Layout.jsx";
+const App = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <Router>
+      <AuthProvider>
+        <Routes>
+          {/* Route de redirection par défaut */}
+          {/*<Route path="/" element={<Navigate to="/login" />} />*/}
 
-export default App
+          {/* Routes publiques */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+          {/* Routes protégées */}
+          <Route path="/" element={<Layout />} />
+
+          {/* Erreur 404 */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
+};
+
+export default App;
