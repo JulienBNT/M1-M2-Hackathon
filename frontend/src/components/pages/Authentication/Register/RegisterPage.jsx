@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/components/contexts/AuthContext.jsx";
+import { useAuth } from "@/components/contexts/AuthContext";
 
 const RegisterPage = () => {
   const [username, setUsername] = useState("");
@@ -8,18 +8,17 @@ const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { register, loading } = useAuth();
   const navigate = useNavigate();
-  const { register } = useAuth();
 
   const validateForm = () => {
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Les mots de passe ne correspondent pas");
       return false;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters long");
+      setError("Le mot de passe doit contenir au moins 8 caractères");
       return false;
     }
 
@@ -34,29 +33,21 @@ const RegisterPage = () => {
       return;
     }
 
-    setIsLoading(true);
-
     try {
       await register(username, email, password);
       navigate("/");
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("An error occurred during registration");
-      }
-      console.error("Registration error:", err);
-    } finally {
-      setIsLoading(false);
+      setError(err.error || "Une erreur s'est produite lors de l'inscription");
+      console.error("Erreur d'inscription:", err);
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white-400">
-      <div className="w-full max-w-md p-8 bg-white-100 rounded-lg shadow-md">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
         <div className="flex justify-center mb-8">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-neutral-900">WhispR</h1>
+            <h1 className="text-2xl font-bold text-blue-800">WhispR</h1>
           </div>
         </div>
 
@@ -102,7 +93,7 @@ const RegisterPage = () => {
             <input
               id="email"
               type="email"
-              placeholder="your@email.com"
+              placeholder="votre@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -151,16 +142,18 @@ const RegisterPage = () => {
 
           <button
             type="submit"
-            className={`w-full py-3 px-4 bg-neutral-900 text-white rounded-md hover:bg-neutral-800 transition-colors ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
-            disabled={isLoading}
+            className={`w-full py-3 px-4 bg-blue-800 text-white rounded-md hover:bg-blue-900 transition-colors ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
+            disabled={loading}
           >
-            {isLoading ? "Creating account..." : "Sign up"}
+            {loading ? "Loading..." : "Register"}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <span className="text-neutral-500 text-sm">
-            Already have an account?{" "}
+            Already have an account ?{" "}
           </span>
           <Link
             to="/login"

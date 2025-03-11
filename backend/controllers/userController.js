@@ -5,36 +5,41 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user._id, email: user.email },
+    process.env.JWT_SECRET || "your_jwt_secret_key",
+    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
+  );
+};
+
 const registerUser = async (req, res) => {
   try {
-    console.log("Register request received:", req.body);
-
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
-      console.log("All fields are required");
       return res.status(400).json({ error: "Tous les champs sont requis" });
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      console.log("Invalid email format");
       return res.status(400).json({ error: "Format d'email invalide" });
     }
 
-    if (password.length < 6) {
-      console.log("Password must be at least 6 characters long");
-      return res.status(400).json({ error: "Le mot de passe doit contenir au moins 6 caractères" });
+    if (password.length < 8) {
+      return res
+        .status(400)
+        .json({ error: "Le mot de passe doit contenir au moins 8 caractères" });
     }
 
     const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
-      console.log("Username or email already exists");
-      return res.status(400).json({ error: "Le nom d'utilisateur ou l'email existe déjà" });
+      return res
+        .status(400)
+        .json({ error: "Le nom d'utilisateur ou l'email existe déjà" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("Password hashed");
 
     const user = new User({
       username,
@@ -43,96 +48,150 @@ const registerUser = async (req, res) => {
     });
 
     await user.save();
-    console.log("User registered:", user);
 
-    res.status(201).json({ message: "Utilisateur enregistré avec succès", user });
+    const token = generateToken(user);
+
+    const userResponse = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+    };
+
+    res.status(201).json({
+      message: "Utilisateur enregistré avec succès",
+      user: userResponse,
+      token,
+    });
   } catch (error) {
-    console.log("Error registering user:", error.message);
-    res.status(400).json({ error: "Erreur lors de l'enregistrement de l'utilisateur" });
+    console.error("Error registering user:", error.message);
+    res
+      .status(500)
+      .json({ error: "Erreur lors de l'enregistrement de l'utilisateur" });
   }
 };
 
 const loginUser = async (req, res) => {
   try {
-    console.log("Login request received:", req.body);
-    const user = await User.findOne({ email: req.body.email });
+    const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Email et mot de passe sont requis" });
+    }
+
+    const user = await User.findOne({ email });
     if (!user) {
-      console.log("User not found");
-      return res.status(404).send({ error: "User not found" });
+      return res.status(401).json({ error: "Email ou mot de passe incorrect" });
     }
 
-    const isMatch = await bcrypt.compare(req.body.password, user.password);
-
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("Invalid password");
-      return res.status(401).send({ error: "Invalid password" });
+      return res.status(401).json({ error: "Email ou mot de passe incorrect" });
     }
 
-    if (!process.env.JWT_SECRET) {
-      console.log("JWT secret is not defined");
-      return res.status(500).send({ error: "Internal server error" });
-    }
+    const token = generateToken(user);
 
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    const userResponse = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+    };
 
-    console.log("Login successful, token generated");
-    res.status(200).send({ message: "Login successful", token });
+    res.status(200).json({
+      message: "Connexion réussie",
+      user: userResponse,
+      token,
+    });
   } catch (error) {
-    console.log("Error logging in user:", error.message);
-    res.status(400).send({ error: error.message });
+    console.error("Error logging in user:", error.message);
+    res.status(500).json({ error: "Erreur lors de la connexion" });
   }
 };
 
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const user = await User.findById(req.user.id).select("-password");
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
     res.status(200).json(user);
   } catch (error) {
-    res.status(400).json({ error: "Error fetching user profile" });
+    console.error("Error fetching user profile:", error.message);
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la récupération du profil utilisateur" });
   }
 };
 
 const updateUserProfile = async (req, res) => {
   try {
-    const { username, password, confirmPassword } = req.body;
-
-    if (password && password !== confirmPassword) {
-      return res.status(400).json({ error: "Passwords do not match" });
-    }
-
+    const { username, email, password, confirmPassword } = req.body;
     const updates = {};
-    if (username) updates.username = username;
-    if (password) updates.password = await bcrypt.hash(password, 10);
 
-    const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true }).select('-password');
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    // Ajouter les champs à mettre à jour si fournis
+    if (username) updates.username = username;
+    if (email) updates.email = email;
+
+    if (password) {
+      if (password !== confirmPassword) {
+        return res
+          .status(400)
+          .json({ error: "Les mots de passe ne correspondent pas" });
+      }
+
+      if (password.length < 8) {
+        return res.status(400).json({
+          error: "Le mot de passe doit contenir au moins 8 caractères",
+        });
+      }
+
+      updates.password = await bcrypt.hash(password, 10);
     }
 
-    res.status(200).json(user);
+    const user = await User.findByIdAndUpdate(req.user.id, updates, {
+      new: true,
+    }).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    res.status(200).json({
+      message: "Profil mis à jour avec succès",
+      user,
+    });
   } catch (error) {
-    res.status(400).json({ error: "Error updating user profile" });
+    console.error("Error updating user profile:", error.message);
+    res.status(500).json({ error: "Erreur lors de la mise à jour du profil" });
   }
 };
 
 const deleteUserAccount = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findByIdAndDelete(req.user.id);
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
-    res.status(200).json({ message: "User account deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Compte utilisateur supprimé avec succès" });
   } catch (error) {
-    res.status(400).json({ error: "Error deleting user account" });
+    console.error("Error deleting user account:", error.message);
+    res.status(500).json({ error: "Erreur lors de la suppression du compte" });
   }
 };
 
-module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, deleteUserAccount };
+// Vérifier la validité du token (pour le frontend)
+const verifyToken = async (req, res) => {
+  res.status(200).json({ user: req.user });
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  getUserProfile,
+  updateUserProfile,
+  deleteUserAccount,
+  verifyToken,
+};

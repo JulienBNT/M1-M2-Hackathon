@@ -12,21 +12,21 @@ import RegisterPage from "@pages/Authentication/Register/RegisterPage.jsx";
 import NotFoundPage from "@pages/error/NotFoundPage.jsx";
 import Layout from "@/components/Layout/Layout.jsx";
 import Home from "@pages/Home/Home.jsx";
+import ProtectedRoute from "@common/ProtectedRoute.jsx";
 const App = () => {
   return (
     <Router>
       <AuthProvider>
         <Routes>
-          {/* Route de redirection par défaut */}
-          {/*<Route path="/" element={<Navigate to="/login" />} />*/}
-
           {/* Routes publiques */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
           {/* Routes protégées */}
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+            </Route>
           </Route>
 
           {/* Erreur 404 */}
