@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Emotion Collection</title>
+</head>
+<body>
+
+  <div id="randDiv"></div>
+  <button id="nextBtn">Next</button>
+  <button id="otherBtn">Other Page</button>
+
+  <div id="resultDiv"></div>
+
+  <script>
+    const nextBtn = document.getElementById("nextBtn");
+    const otherBtn = document.getElementById("otherBtn");
+    const resultDiv = document.getElementById("resultDiv");
+    const randDiv = document.getElementById("randDiv");
+    randString=["animals","politics","school","crisis","money","sport","travel","exam"];
+    
+
+    nextBtn.addEventListener("click", async () => {
+      // Call the /detect_emotion_once endpoint
+      try {
+        let randNum = Math.floor(Math.random() * randString.length);
+        let topic = randString[randNum];
+        const response = await fetch(`/detect_emotion_once?topic=${encodeURIComponent(topic)}`);
+        const data = await response.json();
+        console.log("Next clicked. Received:", data);
+
+        // Show a quick summary
+        resultDiv.innerHTML = `
+          <p>Snapshot #${data.total_snapshots_collected}, Faces: ${data.num_faces}</p>
+        `;
+
+        resultDiv.innerHTML = `
+          <p>${randString[randNum]}</p>
+        `;
+
+      } catch (error) {
+        console.error(error);
+        resultDiv.innerText = "Error capturing snapshot.";
+      }
+    });
+
+    otherBtn.addEventListener("click", async () => {
+      // Call the /stop_collection endpoint
+      try {
+        const response = await fetch("/stop_collection");
+        const data = await response.json();
+        console.log("Stopping. Received:", data);
+        // Display final data or redirect somewhere
+        resultDiv.innerHTML = `
+          <p>Stopped collecting.</p>
+          <pre>${JSON.stringify(data.data.collected_data, null, 2)}</pre>
+        `;
+      } catch (error) {
+        console.error(error);
+        resultDiv.innerText = "Error stopping collection.";
+      }
+    });
+  </script>
+</body>
+</html>
