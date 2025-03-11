@@ -1,9 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { FaHome, FaUser, FaBell, FaEnvelope, FaBookmark } from "react-icons/fa";
 import coverImage from "@/assets/coverdefault.jpg";
+import { useAuth } from "@components/contexts/AuthContext.jsx";
 
 const SideMenu = () => {
   const location = useLocation();
+  const { currentUser } = useAuth();
 
   const navLinks = [
     { path: "/", icon: <FaHome size={22} />, label: "Home" },
@@ -15,6 +17,10 @@ const SideMenu = () => {
       label: "Notifications",
     },
   ];
+
+  const capitalizeWords = (str) => {
+    return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  };
 
   return (
     <aside className="bg-white rounded-2xl shadow-sm overflow-hidden w-full">
@@ -34,7 +40,9 @@ const SideMenu = () => {
         <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
           <div className="w-32 h-32 rounded-full bg-white p-1.5">
             <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-              <span className="font-medium text-neutral-700 text-3xl">R</span>
+              <span className="font-medium text-neutral-700 text-3xl">
+                {currentUser.username.charAt(0).toUpperCase()}
+              </span>
             </div>
           </div>
         </div>
@@ -42,8 +50,10 @@ const SideMenu = () => {
 
       {/* User info */}
       <div className="pt-20 px-6 pb-4 text-center">
-        <div className="font-bold text-neutral-900 text-2xl">Robert Fox</div>
-        <div className="text-base text-neutral-600">Software Engineer</div>
+        <div className="font-bold text-neutral-900 text-2xl">
+          {capitalizeWords(currentUser.username)}
+        </div>
+        <div className="text-base text-neutral-600">{currentUser.email}</div>
       </div>
 
       {/* Navigation */}

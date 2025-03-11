@@ -1,9 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Search } from "lucide-react";
+import authService from "@components/services/authService.js";
+import { useAuth } from "@components/contexts/AuthContext.jsx";
 
 const Header = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearchSubmit = (e) => {
@@ -14,6 +17,7 @@ const Header = () => {
   };
 
   const handleLogout = () => {
+    authService.logout();
     navigate("/login");
   };
 
@@ -50,7 +54,9 @@ const Header = () => {
           </button>
           <Link to="/profile" className="ml-4">
             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-              <span className="font-medium text-neutral-700">R</span>
+              <span className="font-medium text-neutral-700">
+                {currentUser.username.charAt(0).toUpperCase()}
+              </span>
             </div>
           </Link>
         </div>

@@ -2,85 +2,153 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const api = axios.create();
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 api.interceptors.request.use(
   (config) => {
-    const token = document.cookie
-      .split(";")
-      .find((c) => c.trim().startsWith("token="));
+    const token = localStorage.getItem("token");
     if (token) {
-      config.headers["Authorization"] = `Bearer ${token.split("=")[1]}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error),
-);
-
-api.interceptors.response.use(
-  (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      document.cookie =
-        "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      window.location.href = "/login";
-    }
     return Promise.reject(error);
   },
 );
 
-const setCookie = (name, value, days = 7) => {
-  const expires = new Date(
-    Date.now() + days * 24 * 60 * 60 * 1000,
-  ).toUTCString();
-  document.cookie = `${name}=${value}; expires=${expires}; path=/`;
-};
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      authService.logout();
+      window.location.href = "/login";
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 const authService = {
-  login: async (email, password) => {
-    try {
-      const response = await axios.post(API_URL + "login", { email, password });
-      if (response.data.token) {
-        setCookie("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-      }
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
   register: async (username, email, password) => {
     try {
-      const response = await axios.post(API_URL + "register", {
+      const response = await api.post("user/register", {
         username,
         email,
         password,
       });
+
       if (response.data.token) {
-        setCookie("token", response.data.token);
+        localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
       }
+
       return response.data;
     } catch (error) {
-      throw error;
+      throw (
+        error.response?.data || {
+          error: "Une erreur s'est produite lors de l'inscription",
+        }
+      );
+    }
+  },
+
+  login: async (email, password) => {
+    try {
+      const response = await api.post("user/login", {
+        email,
+        password,
+      });
+
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+      }
+
+      return response.data;
+    } catch (error) {
+      throw (
+        error.response?.data || {
+          error: "Une erreur s'est produite lors de la connexion",
+        }
+      );
     }
   },
 
   logout: () => {
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
   },
 
   getCurrentUser: () => {
-    const userStr = localStorage.getItem("user");
-    return userStr ? JSON.parse(userStr) : null;
+    try {
+      const user = localStorage.getItem("user");
+      return user ? JSON.parse(user) : null;
+    } catch (error) {
+      console.error(
+        "Erreur lors de l'analyse de l'utilisateur depuis localStorage:",
+        error,
+      );
+      authService.logout();
+      return null;
+    }
+  },
+
+  getToken: () => {
+    return localStorage.getItem("token");
   },
 
   isAuthenticated: () => {
-    return document.cookie
-      .split(";")
-      .some((c) => c.trim().startsWith("token="));
+    return !!localStorage.getItem("token");
+  },
+
+  verifyToken: async () => {
+    try {
+      const response = await api.get("user/verify");
+      return response.data.user;
+    } catch (error) {
+      authService.logout();
+      throw error;
+    }
+  },
+
+  updateProfile: async (userData) => {
+    try {
+      const response = await api.put("user/me", userData);
+
+      if (response.data.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+      }
+
+      return response.data;
+    } catch (error) {
+      throw (
+        error.response?.data || {
+          error: "Une erreur s'est produite lors de la mise à jour du profil",
+        }
+      );
+    }
+  },
+
+  deleteAccount: async () => {
+    try {
+      const response = await api.delete("user/me");
+      authService.logout();
+      return response.data;
+    } catch (error) {
+      throw (
+        error.response?.data || {
+          error: "Une erreur s'est produite lors de la suppression du compte",
+        }
+      );
+    }
   },
 
   api,

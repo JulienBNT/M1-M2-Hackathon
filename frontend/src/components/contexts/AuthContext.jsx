@@ -1,66 +1,130 @@
-import { createContext, useContext, useState } from "react";
-import axios from "axios";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import authService from "../services/authService";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  const register = async (username, email, password) => {
-    setLoading(true);
-    try {
-      const response = await axios.post("/api/auth/register", {
-        username,
-        email,
-        password,
-      });
-      setCurrentUser(response.data.user);
-      return response.data;
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const storedUser = authService.getCurrentUser();
+
+        if (storedUser && authService.isAuthenticated()) {
+          try {
+            await authService.verifyToken();
+            setCurrentUser(storedUser);
+          } catch (err) {
+            authService.logout();
+          }
+        }
+      } catch (err) {
+        console.error("Erreur d'initialisation auth:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
 
   const login = async (email, password) => {
     setLoading(true);
+    setError(null);
+
     try {
-      const response = await axios.post("/api/auth/login", {
-        email,
-        password,
-      });
-      setCurrentUser(response.data.user);
-      return response.data;
+      const result = await authService.login(email, password);
+      setCurrentUser(result.user);
+      return result;
+    } catch (err) {
+      setError(err.error || "Échec de connexion");
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = async () => {
+  const register = async (username, email, password) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await authService.register(username, email, password);
+      setCurrentUser(result.user);
+      return result;
+    } catch (err) {
+      setError(err.error || "Échec d'inscription");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
     setLoading(true);
     try {
-      await axios.post("/api/auth/logout");
+      authService.logout();
       setCurrentUser(null);
+      navigate("/login");
     } finally {
       setLoading(false);
     }
   };
 
-  const value = {
-    currentUser,
-    loading,
-    register,
-    login,
-    logout,
+  const updateProfile = async (userData) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await authService.updateProfile(userData);
+      setCurrentUser(result.user);
+      return result;
+    } catch (err) {
+      setError(err.error || "Échec de mise à jour du profil");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const deleteAccount = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await authService.deleteAccount();
+      setCurrentUser(null);
+      navigate("/login");
+    } catch (err) {
+      setError(err.error || "Échec de suppression du compte");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const contextValue = {
+    currentUser,
+    loading,
+    error,
+    isAuthenticated: !!currentUser,
+    login,
+    register,
+    logout,
+    updateProfile,
+    deleteAccount,
+  };
+
+  return (
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  return useContext(AuthContext);
 };
