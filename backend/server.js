@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const userRoute = require("./routes/userRoute");
 const postRoute = require("./routes/postRoute");
+const repostRoute = require("./routes/repostRoute");
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -21,6 +22,7 @@ app.use(express.json());
 
 app.use("/user", userRoute);
 app.use("/posts", postRoute);
+app.use("/reposts", repostRoute);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
