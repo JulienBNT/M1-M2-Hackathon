@@ -7,6 +7,7 @@ const postRoute = require("./routes/postRoute");
 const repostRoute = require("./routes/repostRoute");
 const bookmarkRoute = require("./routes/bookmarkRoute");
 const likeRoute = require("./routes/likeRoute");
+const commentRoute = require("./routes/commentRoute");
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -27,6 +28,7 @@ app.use("/posts", postRoute);
 app.use("/reposts", repostRoute);
 app.use("/bookmarks", bookmarkRoute);
 app.use("/likes", likeRoute);
+app.use("/comments", commentRoute);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
