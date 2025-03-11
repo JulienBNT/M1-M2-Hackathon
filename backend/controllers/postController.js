@@ -75,7 +75,6 @@ const getAllPosts = async (req, res) => {
         const post = await Post.findById(req.params.id);
   
         if (!post) {
-            console.log('Post not found');
             return res.status(404).json({ error: 'Post not found' });
         }
   
