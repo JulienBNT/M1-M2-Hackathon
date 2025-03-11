@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const bookmarkSchema = new mongoose.Schema({
+const likeSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -16,8 +16,8 @@ const bookmarkSchema = new mongoose.Schema({
         default: Date.now
     }
 });
-bookmarkSchema.index({ user: 1, post: 1 }, { unique: true });
+likeSchema.index({ user: 1, post: 1 }, { unique: true });
 
-const Bookmark = mongoose.model('Bookmark', bookmarkSchema);
+const Like = mongoose.model('Like', likeSchema);
 
-module.exports = Bookmark;
+module.exports = Like;
