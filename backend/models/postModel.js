@@ -11,23 +11,11 @@ const postSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    likes: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }],
-    comments: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Comment'
-    }],
-    reposts: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Repost'
-    }],
-    bookmarks: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Bookmark'
-    }],
     createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
         type: Date,
         default: Date.now
     }

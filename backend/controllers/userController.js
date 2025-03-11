@@ -54,7 +54,11 @@ const registerUser = async (req, res) => {
     const userResponse = {
       _id: user._id,
       username: user.username,
+      firstname: "",
+      lastname: "",
       email: user.email,
+      profilePicture: "",
+      bio: "",
     };
 
     res.status(201).json({
