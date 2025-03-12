@@ -2,33 +2,30 @@ const Post = require('../models/postModel');
 const Comment = require('../models/commentModel');
 
 const createComment = async (req, res) => {
-    try {
-      const { content, postId, author } = req.body;
+  try {
+    const { content, postId } = req.body;
+    const author = req.user.id;
 
-      const post = await Post.findById(postId);
-      if (!post) {
-        return res.status(404).json({ error: 'Original post not found' });
-      }
-  
-      const comment = new Comment({
-        content,
-        author,
-        post: postId,
-      });
-  
-      await comment.save();
-  
-      if (!post.comments) {
-        post.comments = [];
-      }
-  
-      post.comments.push(comment._id);
-      await post.save();
-  
-      res.status(201).json(comment);
-    } catch (error) {
-      res.status(400).json({ error: 'Error creating comment' });
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ error: 'Original post not found' });
     }
+
+    const comment = new Comment({
+      content,
+      author,
+      post: postId,
+    });
+
+    await comment.save();
+
+    post.comments.push(comment._id);
+    await post.save();
+
+    res.status(201).json(comment);
+  } catch (error) {
+    res.status(400).json({ error: 'Error creating comment' });
+  }
 };
 
 const getComments = async (req, res) => {
@@ -42,6 +39,18 @@ const getComments = async (req, res) => {
   }
 };
 
+const getCommentsByUser = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const comments = await Comment.find({ author: userId })
+      .populate('author', 'username')
+      .populate('post');
+    res.status(200).json(comments);
+  } catch (error) {
+    res.status(400).json({ error: 'Error fetching comments by user' });
+  }
+};
+
 const deleteComment = async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id);
@@ -49,9 +58,6 @@ const deleteComment = async (req, res) => {
     if (!comment) {
       return res.status(404).json({ error: 'Comment not found' });
     }
-
-    // Enlever cette ligne dés que le middleware d'authentification est en place
-    req.user = { id: '67cf055df341c617ffe64da9' };
 
     if (comment.author.toString() !== req.user.id) {
       return res.status(403).json({ error: 'Unauthorized' });
@@ -63,18 +69,6 @@ const deleteComment = async (req, res) => {
     res.status(400).json({ error: 'Error deleting comment' });
   }
 };
-
-const getCommentsByUser = async (req, res) => {
-    try {
-      const userId = req.params.userId;
-      const comments = await Comment.find({ author: userId })
-        .populate('author', 'username')
-        .populate('post');
-      res.status(200).json(comments);
-    } catch (error) {
-      res.status(400).json({ error: 'Error fetching comments by user' });
-    }
-  };
 
 const viewComment = async (req, res) => {
   try {
@@ -100,9 +94,6 @@ const modifyComment = async (req, res) => {
     if (!comment) {
       return res.status(404).json({ error: 'Comment not found' });
     }
-
-    // Enlever cette ligne dés que le middleware d'authentification est en place
-    req.user = { id: '67cf055df341c617ffe64da9' };
 
     if (comment.author.toString() !== req.user.id) {
       return res.status(403).json({ error: 'Unauthorized' });

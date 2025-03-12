@@ -5,24 +5,21 @@ const Repost = require('../models/repostModel');
 const Bookmark = require('../models/bookmarkModel');
 
 const createPost = async (req, res) => {
-    try {
-        const { content, author } = req.body;
+  try {
+    const { content } = req.body;
+    const author = req.user.id;
 
-        // // Remettre dés que le middleware d'authentification est en place
-        // const { content } = req.body;
-        // const author = req.user.id;
-  
-        const post = new Post({
-            content,
-            author,
-        });
+    const post = new Post({
+      content,
+      author,
+    });
 
-        await post.save();
-        res.status(201).json(post);
-    } catch (error) {
-        res.status(400).json({ error: 'Error creating post' });
-    }
-  };
+    await post.save();
+    res.status(201).json(post);
+  } catch (error) {
+    res.status(400).json({ error: 'Error creating post' });
+  }
+};
 
 const deletePost = async (req, res) => {
   try {
@@ -31,9 +28,6 @@ const deletePost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
     }
-
-    // Enlever cette ligne dés que le middleware d'authentification est en place
-    req.user = { id: '67cf055df341c617ffe64da9' };
 
     if (post.author.toString() !== req.user.id) {
       return res.status(403).json({ error: 'Unauthorized' });
@@ -61,37 +55,35 @@ const viewPost = async (req, res) => {
 };
 
 const getAllPosts = async (req, res) => {
-    try {
-      const posts = await Post.find().populate('author', 'username').populate('comments').populate('reposts').populate('bookmarks');
-      res.status(200).json(posts);
-    } catch (error) {
-      res.status(400).json({ error: 'Error fetching posts' });
-    }
-  };
+  try {
+    const posts = await Post.find().populate('author', 'username').populate('comments').populate('reposts').populate('bookmarks');
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(400).json({ error: 'Error fetching posts' });
+  }
+};
 
-  const modifyPost = async (req, res) => {
-    try {
-        const { content } = req.body;
-        const post = await Post.findById(req.params.id);
-  
-        if (!post) {
-            return res.status(404).json({ error: 'Post not found' });
-        }
-  
-        // Enlever cette ligne dés que le middleware d'authentification est en place
-        req.user = { id: '67cf055df341c617ffe64da9' };
-  
-        if (post.author.toString() !== req.user.id) {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-  
-        post.content = content;
-        await post.save();
-  
-        res.status(200).json(post);
-    } catch (error) {
-        res.status(400).json({ error: 'Error updating post' });
+const modifyPost = async (req, res) => {
+  try {
+    const { content } = req.body;
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
     }
-  };
+
+    if (post.author.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    post.content = content;
+    post.updatedAt = Date.now();
+    await post.save();
+
+    res.status(200).json(post);
+  } catch (error) {
+    res.status(400).json({ error: 'Error updating post' });
+  }
+};
 
 module.exports = { createPost, deletePost, viewPost, getAllPosts, modifyPost };
