@@ -1,9 +1,11 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -11,7 +13,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = Cookies.get("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -37,17 +39,25 @@ api.interceptors.response.use(
 );
 
 const authService = {
-  register: async (username, email, password) => {
+  register: async (lastname, firstname, username, email, password) => {
     try {
-      const response = await api.post("user/register", {
+      const response = await api.post("/user/register", {
+        lastname,
+        firstname,
         username,
         email,
         password,
       });
 
       if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+        Cookies.set("token", response.data.token, {
+          secure: true,
+          sameSite: "strict",
+        });
+        Cookies.set("user", JSON.stringify(response.data.user), {
+          secure: true,
+          sameSite: "strict",
+        });
       }
 
       return response.data;
@@ -62,14 +72,20 @@ const authService = {
 
   login: async (email, password) => {
     try {
-      const response = await api.post("user/login", {
+      const response = await api.post("/user/login", {
         email,
         password,
       });
 
       if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+        Cookies.set("token", response.data.token, {
+          secure: true,
+          sameSite: "strict",
+        });
+        Cookies.set("user", JSON.stringify(response.data.user), {
+          secure: true,
+          sameSite: "strict",
+        });
       }
 
       return response.data;
@@ -83,17 +99,17 @@ const authService = {
   },
 
   logout: () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    Cookies.remove("token");
+    Cookies.remove("user");
   },
 
   getCurrentUser: () => {
     try {
-      const user = localStorage.getItem("user");
+      const user = Cookies.get("user");
       return user ? JSON.parse(user) : null;
     } catch (error) {
       console.error(
-        "Erreur lors de l'analyse de l'utilisateur depuis localStorage:",
+        "Erreur lors de l'analyse de l'utilisateur depuis les cookies:",
         error,
       );
       authService.logout();
@@ -101,53 +117,32 @@ const authService = {
     }
   },
 
+  updateUserInCookies: (user) => {
+    try {
+      Cookies.set("user", JSON.stringify(user), {
+        secure: true,
+        sameSite: "strict",
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des cookies:", error);
+    }
+  },
+
   getToken: () => {
-    return localStorage.getItem("token");
+    return Cookies.get("token");
   },
 
   isAuthenticated: () => {
-    return !!localStorage.getItem("token");
+    return !!Cookies.get("token");
   },
 
   verifyToken: async () => {
     try {
-      const response = await api.get("user/verify");
+      const response = await api.get("/user/verify");
       return response.data.user;
     } catch (error) {
       authService.logout();
       throw error;
-    }
-  },
-
-  updateProfile: async (userData) => {
-    try {
-      const response = await api.put("user/me", userData);
-
-      if (response.data.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-      }
-
-      return response.data;
-    } catch (error) {
-      throw (
-        error.response?.data || {
-          error: "Une erreur s'est produite lors de la mise à jour du profil",
-        }
-      );
-    }
-  },
-
-  deleteAccount: async () => {
-    try {
-      const response = await api.delete("user/me");
-      authService.logout();
-      return response.data;
-    } catch (error) {
-      throw (
-        error.response?.data || {
-          error: "Une erreur s'est produite lors de la suppression du compte",
-        }
-      );
     }
   },
 
