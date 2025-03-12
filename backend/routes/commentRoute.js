@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { createComment, deleteComment, getCommentsByUser, viewComment, getComments, modifyComment } = require('../controllers/commentController');
+const { protect } = require('../middlewares/authMiddleware');
 
-router.post('/', createComment);
-router.get('/', getComments);
-router.delete('/:id', deleteComment);
-router.get('/:id', viewComment);
-router.get('/user/:userId', getCommentsByUser);
-router.put('/:id', modifyComment);
+router.post('/', protect, createComment);
+router.get('/', protect, getComments);
+router.delete('/:id', protect, deleteComment);
+router.get('/:id', protect, viewComment);
+router.get('/user/:userId', protect, getCommentsByUser);
+router.put('/:id', protect, modifyComment);
 
 module.exports = router;

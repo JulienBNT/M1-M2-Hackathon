@@ -6,11 +6,8 @@ const Bookmark = require("../models/bookmarkModel");
 
 const createPost = async (req, res) => {
   try {
-    const { content, author } = req.body;
-
-    // // Remettre dés que le middleware d'authentification est en place
-    // const { content } = req.body;
-    // const author = req.user.id;
+    const { content } = req.body;
+    const author = req.user.id;
 
     const post = new Post({
       content,
@@ -31,10 +28,6 @@ const deletePost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
-
-    // Enlever cette ligne dés que le middleware d'authentification est en place
-    req.user = { id: "67cf055df341c617ffe64da9" };
-
     if (post.author.toString() !== req.user.id) {
       return res.status(403).json({ error: "Unauthorized" });
     }
@@ -92,16 +85,22 @@ const modifyPost = async (req, res) => {
     const post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ error: "Post not found" });
+      return res.status(404).json({ error: 'Post not found' });
     }
-
-    // Enlever cette ligne dés que le middleware d'authentification est en place
-    req.user = { id: "67cf055df341c617ffe64da9" };
 
     if (post.author.toString() !== req.user.id) {
-      return res.status(403).json({ error: "Unauthorized" });
+      return res.status(403).json({ error: 'Unauthorized' });
     }
 
+    post.content = content;
+    post.updatedAt = Date.now();
+    await post.save();
+
+    res.status(200).json(post);
+  } catch (error) {
+    res.status(400).json({ error: 'Error updating post' });
+  }
+};
     post.content = content;
     await post.save();
 

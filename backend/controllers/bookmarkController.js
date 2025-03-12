@@ -3,20 +3,14 @@ const Post = require('../models/postModel');
 
 const createBookmark = async (req, res) => {
   try {
+    const { postId } = req.body;
+    const userId = req.user.id;
 
-    // const { postId } = req.body;
-    // const userId = req.user.id;
-
-    // Enlever si le middleware est utilisé
-    const { postId, userId } = req.body;
-
-    // Check if the post exists
     const post = await Post.findById(postId);
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    // Create a new bookmark
     const bookmark = new Bookmark({
       user: userId,
       post: postId,
@@ -34,11 +28,8 @@ const createBookmark = async (req, res) => {
 
 const deleteBookmark = async (req, res) => {
   try {
-    // const { postId } = req.body;
-    // const userId = req.user.id;
-
-    // Enlever si le middleware est utilisé
-    const { postId, userId } = req.body;
+    const { postId } = req.body;
+    const userId = req.user.id;
 
     const bookmark = await Bookmark.findOneAndDelete({ user: userId, post: postId });
 
@@ -54,10 +45,7 @@ const deleteBookmark = async (req, res) => {
 
 const getUserBookmarks = async (req, res) => {
   try {
-    // const userId = req.user.id;
-
-    // Enlever si le middleware est utilisé
-    const { userId } = req.body;
+    const userId = req.user.id;
 
     const bookmarks = await Bookmark.find({ user: userId }).populate('post');
     res.status(200).json(bookmarks);
