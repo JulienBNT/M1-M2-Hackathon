@@ -101,14 +101,6 @@ const modifyPost = async (req, res) => {
     res.status(400).json({ error: 'Error updating post' });
   }
 };
-    post.content = content;
-    await post.save();
-
-    res.status(200).json(post);
-  } catch (error) {
-    res.status(400).json({ error: "Error updating post" });
-  }
-};
 
 module.exports = {
   createPost,
