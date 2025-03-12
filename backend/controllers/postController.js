@@ -102,6 +102,15 @@ const modifyPost = async (req, res) => {
   }
 };
 
+const getPostCountByUser = async (req, res) => {
+  try {
+    const count = await Post.countDocuments({ author: req.params.userId });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(400).json({ error: "Error counting posts" });
+  }
+};
+
 module.exports = {
   createPost,
   deletePost,
@@ -109,4 +118,5 @@ module.exports = {
   getAllPosts,
   modifyPost,
   getAllPostsByUser,
+  getPostCountByUser,
 };

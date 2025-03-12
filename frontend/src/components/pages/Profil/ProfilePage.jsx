@@ -1,11 +1,14 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@components/contexts/AuthContext.jsx";
+import { useUsers } from "@components/hooks/useUsers.js";
 
 const ProfilePage = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("");
+  const [countPosts, setCountPosts] = useState();
   const { currentUser } = useAuth();
+  const { getCountPostsByUser } = useUsers();
 
   useEffect(() => {
     const path = location.pathname;
@@ -16,7 +19,20 @@ const ProfilePage = () => {
     } else {
       setActiveTab("posts");
     }
-  }, [location]);
+
+    const fetchPostCount = async () => {
+      if (currentUser?._id) {
+        try {
+          const data = await getCountPostsByUser(currentUser._id);
+          setCountPosts(data);
+        } catch (error) {
+          console.error("Error fetching posts count:", error);
+        }
+      }
+    };
+
+    fetchPostCount();
+  }, [location, currentUser, getCountPostsByUser]);
 
   if (!currentUser) {
     return (
@@ -59,7 +75,7 @@ const ProfilePage = () => {
             <div className="flex justify-center md:justify-start space-x-8 md:space-x-12 mb-3">
               <div className="text-center">
                 <p className="text-xl md:text-2xl font-bold text-gray-800">
-                  12
+                  {countPosts ?? 0}
                 </p>
                 <p className="text-gray-600 text-sm">Posts</p>
               </div>

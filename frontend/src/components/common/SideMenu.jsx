@@ -57,8 +57,8 @@ const SideMenu = () => {
       {/* User info */}
       <div className="flex-col pt-20 px-6 pb-4 text-center">
         <div className="font-bold text-neutral-900 text-2xl mb-1">
-          {capitalizeWords(currentUser.firstname)}{" "}
-          {capitalizeWords(currentUser.lastname)}
+          {capitalizeWords(currentUser.firstname ?? "")}{" "}
+          {capitalizeWords(currentUser.lastname ?? "")}
         </div>
         <div className="text-gray-500 text-sm mb-1 ">
           @{capitalizeWords(currentUser.username)}
