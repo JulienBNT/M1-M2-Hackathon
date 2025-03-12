@@ -181,9 +181,9 @@ const ProfileSettings = () => {
                   src={
                     currentUser.profilePicture.startsWith("/")
                       ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
-                      : currentUser.profilePicture
+                      : "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fno-picture-profile&psig=AOvVaw2-Wr3YfhEpJasWlYdA0KWC&ust=1741880997904000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCPjv9MXyhIwDFQAAAAAdAAAAABAE"
                   }
-                  alt="Profile"
+                  alt="Profile Picture"
                   className="w-full h-full object-cover"
                 />
               ) : (

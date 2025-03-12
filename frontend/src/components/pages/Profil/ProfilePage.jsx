@@ -34,7 +34,7 @@ const ProfilePage = () => {
               src={
                 currentUser?.profilePicture?.startsWith("/")
                   ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
-                  : currentUser?.profilePicture
+                  : "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fno-picture-profile&psig=AOvVaw2-Wr3YfhEpJasWlYdA0KWC&ust=1741880997904000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCPjv9MXyhIwDFQAAAAAdAAAAABAE"
               }
               alt="profile picture"
               className="w-full h-full object-cover"
@@ -47,10 +47,10 @@ const ProfilePage = () => {
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
                   {currentUser.firstname} {currentUser.lastname}
                 </h1>
-                <p className="text-gray-500 text-sm mb-1">
+                <p className="text-gray-500 text-xl mb-1">
                   @{currentUser.username}
                 </p>
-                <p className="text-gray-600 italic">
+                <p className="text-gray-600 text-sm italic">
                   {currentUser.bio || "No bio available"}
                 </p>
               </div>

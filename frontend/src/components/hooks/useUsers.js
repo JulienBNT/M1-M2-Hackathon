@@ -25,8 +25,6 @@ export const useUsers = () => {
         },
       });
 
-      console.log("Réponse API:", response.data);
-
       if (response.data.user) {
         authService.updateUserInCookies(response.data.user);
       }
