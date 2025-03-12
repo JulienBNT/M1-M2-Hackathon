@@ -2,6 +2,8 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const fs = require("fs");
+const path = require("path");
 
 dotenv.config();
 
@@ -15,9 +17,9 @@ const generateToken = (user) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { lastname, firstname, username, email, password } = req.body;
 
-    if (!username || !email || !password) {
+    if (!lastname || !firstname || !username || !email || !password) {
       return res.status(400).json({ error: "Tous les champs sont requis" });
     }
 
@@ -40,8 +42,9 @@ const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = new User({
+      lastname,
+      firstname,
       username,
       email,
       password: hashedPassword,
@@ -50,12 +53,11 @@ const registerUser = async (req, res) => {
     await user.save();
 
     const token = generateToken(user);
-
     const userResponse = {
       _id: user._id,
+      lastname: user.lastname,
+      firstname: user.firstname,
       username: user.username,
-      firstname: "",
-      lastname: "",
       email: user.email,
       profilePicture: "",
       bio: "",
@@ -95,11 +97,14 @@ const loginUser = async (req, res) => {
     }
 
     const token = generateToken(user);
-
     const userResponse = {
       _id: user._id,
+      lastname: user.lastname,
+      firstname: user.firstname,
       username: user.username,
       email: user.email,
+      profilePicture: user.profilePicture || "",
+      bio: user.bio || "",
     };
 
     res.status(200).json({
@@ -116,9 +121,7 @@ const loginUser = async (req, res) => {
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
-    }
+    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
     res.status(200).json(user);
   } catch (error) {
     console.error("Error fetching user profile:", error.message);
@@ -130,40 +133,46 @@ const getUserProfile = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
   try {
-    const { username, email, password, confirmPassword } = req.body;
+    const { lastname, firstname, username, email, bio } = req.body;
     const updates = {};
 
-    // Ajouter les champs à mettre à jour si fournis
+    if (lastname) updates.lastname = lastname;
+    if (firstname) updates.firstname = firstname;
     if (username) updates.username = username;
     if (email) updates.email = email;
+    if (bio) updates.bio = bio;
 
-    if (password) {
-      if (password !== confirmPassword) {
-        return res
-          .status(400)
-          .json({ error: "Les mots de passe ne correspondent pas" });
+    if (req.file) {
+      updates.profilePicture = `/uploads/profiles/${req.file.filename}`;
+
+      // Supprime l'ancienne image si elle existe et n'est pas une image par défaut
+      const user = await User.findById(req.user._id);
+      if (
+        user &&
+        user.profilePicture &&
+        !user.profilePicture.includes("freepik.com") &&
+        !user.profilePicture.includes("placeholder")
+      ) {
+        const oldImagePath = path.join(
+          __dirname,
+          "..",
+          "public",
+          user.profilePicture,
+        );
+        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
       }
-
-      if (password.length < 8) {
-        return res.status(400).json({
-          error: "Le mot de passe doit contenir au moins 8 caractères",
-        });
-      }
-
-      updates.password = await bcrypt.hash(password, 10);
     }
 
-    const user = await User.findByIdAndUpdate(req.user.id, updates, {
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
       new: true,
     }).select("-password");
 
-    if (!user) {
+    if (!updatedUser)
       return res.status(404).json({ error: "Utilisateur non trouvé" });
-    }
 
     res.status(200).json({
       message: "Profil mis à jour avec succès",
-      user,
+      user: updatedUser,
     });
   } catch (error) {
     console.error("Error updating user profile:", error.message);
@@ -171,12 +180,54 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+const updateUserPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch)
+      return res.status(400).json({ error: "Mot de passe actuel incorrect" });
+
+    if (newPassword !== confirmPassword)
+      return res
+        .status(400)
+        .json({ error: "Les mots de passe ne correspondent pas" });
+
+    if (newPassword.length < 8)
+      return res
+        .status(400)
+        .json({ error: "Le mot de passe doit contenir au moins 8 caractères" });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.status(200).json({ message: "Mot de passe mis à jour avec succès" });
+  } catch (error) {
+    console.error("Error updating user password:", error.message);
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la mise à jour du mot de passe" });
+  }
+};
+
 const deleteUserAccount = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.user.id);
-    if (!user) {
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    if (user.profilePicture && !user.profilePicture.includes("freepik.com")) {
+      const imagePath = path.join(
+        __dirname,
+        "..",
+        "public",
+        user.profilePicture,
+      );
+      if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
     }
+
+    await User.findByIdAndDelete(user._id);
     res
       .status(200)
       .json({ message: "Compte utilisateur supprimé avec succès" });
@@ -186,7 +237,6 @@ const deleteUserAccount = async (req, res) => {
   }
 };
 
-// Vérifier la validité du token (pour le frontend)
 const verifyToken = async (req, res) => {
   res.status(200).json({ user: req.user });
 };
@@ -196,6 +246,7 @@ module.exports = {
   loginUser,
   getUserProfile,
   updateUserProfile,
+  updateUserPassword,
   deleteUserAccount,
   verifyToken,
 };

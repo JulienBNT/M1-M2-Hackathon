@@ -49,12 +49,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (username, email, password) => {
+  const register = async (lastname, firstname, username, email, password) => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await authService.register(username, email, password);
+      const result = await authService.register(
+        lastname,
+        firstname,
+        username,
+        email,
+        password,
+      );
       setCurrentUser(result.user);
       return result;
     } catch (err) {
@@ -82,8 +88,14 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const result = await authService.updateProfile(userData);
-      setCurrentUser(result.user);
-      return result;
+      console.log("Résultat de la mise à jour:", result); // Debug
+
+      if (result && result.user) {
+        setCurrentUser(result.user);
+        return result.user;
+      } else {
+        throw new Error("Réponse API incomplète");
+      }
     } catch (err) {
       setError(err.error || "Échec de mise à jour du profil");
       throw err;
@@ -91,7 +103,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
   const deleteAccount = async () => {
     setLoading(true);
     setError(null);
@@ -110,6 +121,7 @@ export const AuthProvider = ({ children }) => {
 
   const contextValue = {
     currentUser,
+    setCurrentUser,
     loading,
     error,
     isAuthenticated: !!currentUser,

@@ -8,6 +8,7 @@ const repostRoute = require("./routes/repostRoute");
 const bookmarkRoute = require("./routes/bookmarkRoute");
 const likeRoute = require("./routes/likeRoute");
 const commentRoute = require("./routes/commentRoute");
+const path = require("path");
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -20,8 +21,14 @@ mongoose
   .then(() => console.log("MongoDB connecté..."))
   .catch((err) => console.error("Erreur de connexion MongoDB:", err));
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/user", userRoute);
 app.use("/posts", postRoute);

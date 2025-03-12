@@ -3,6 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/components/contexts/AuthContext";
 
 const RegisterPage = () => {
+  const [lastname, setLastname] = useState("");
+  const [firstname, setFirstname] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +36,7 @@ const RegisterPage = () => {
     }
 
     try {
-      await register(username, email, password);
+      await register(lastname, firstname, username, email, password);
       navigate("/");
     } catch (err) {
       setError(err.error || "Une erreur s'est produite lors de l'inscription");
@@ -65,6 +67,40 @@ const RegisterPage = () => {
         )}
 
         <form onSubmit={handleRegister}>
+          <div className="mb-4">
+            <label
+              htmlFor="lastname"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
+              Lastname
+            </label>
+            <input
+              id="lastname"
+              type="text"
+              placeholder="Doe"
+              value={lastname}
+              onChange={(e) => setLastname(e.target.value)}
+              required
+              className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-400"
+            />
+          </div>
+          <div className="mb-4">
+            <label
+              htmlFor="firstname"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
+              Firstname
+            </label>
+            <input
+              id="firstname"
+              type="text"
+              placeholder="John"
+              value={firstname}
+              onChange={(e) => setFirstname(e.target.value)}
+              required
+              className="w-full px-4 py-3 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-400"
+            />
+          </div>
           <div className="mb-4">
             <label
               htmlFor="username"

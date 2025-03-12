@@ -38,11 +38,17 @@ const SideMenu = () => {
         />
 
         <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
-          <div className="w-32 h-32 rounded-full bg-white p-1.5">
+          <div className="w-24 h-24 rounded-full bg-white p-1.5">
             <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-              <span className="font-medium text-neutral-700 text-3xl">
-                {currentUser.username.charAt(0).toUpperCase()}
-              </span>
+              <img
+                src={
+                  currentUser?.profilePicture?.startsWith("/")
+                    ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
+                    : currentUser?.profilePicture
+                }
+                alt="none"
+                className="w-full h-full object-cover p-0 m-0"
+              />
             </div>
           </div>
         </div>

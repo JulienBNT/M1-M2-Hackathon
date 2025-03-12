@@ -1,8 +1,8 @@
-const Post = require('../models/postModel');
-const User = require('../models/userModel');
-const Comment = require('../models/commentModel');
-const Repost = require('../models/repostModel');
-const Bookmark = require('../models/bookmarkModel');
+const Post = require("../models/postModel");
+const User = require("../models/userModel");
+const Comment = require("../models/commentModel");
+const Repost = require("../models/repostModel");
+const Bookmark = require("../models/bookmarkModel");
 
 const createPost = async (req, res) => {
   try {
@@ -17,7 +17,7 @@ const createPost = async (req, res) => {
     await post.save();
     res.status(201).json(post);
   } catch (error) {
-    res.status(400).json({ error: 'Error creating post' });
+    res.status(400).json({ error: "Error creating post" });
   }
 };
 
@@ -26,40 +26,56 @@ const deletePost = async (req, res) => {
     const post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
+      return res.status(404).json({ error: "Post not found" });
     }
-
     if (post.author.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
     await post.deleteOne();
-    res.status(200).json({ message: 'Post deleted successfully' });
+    res.status(200).json({ message: "Post deleted successfully" });
   } catch (error) {
-    res.status(400).json({ error: 'Error deleting post' });
+    res.status(400).json({ error: "Error deleting post" });
   }
 };
 
 const viewPost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate('author', 'username').populate('comments').populate('reposts').populate('bookmarks');
+    const post = await Post.findById(req.params.id)
+      .populate("author", "username")
+      .populate("comments")
+      .populate("reposts")
+      .populate("bookmarks");
 
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
+      return res.status(404).json({ error: "Post not found" });
     }
 
     res.status(200).json(post);
   } catch (error) {
-    res.status(400).json({ error: 'Error fetching post' });
+    res.status(400).json({ error: "Error fetching post" });
   }
 };
 
 const getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find().populate('author', 'username').populate('comments').populate('reposts').populate('bookmarks');
+    const posts = await Post.find().populate("author", "username");
     res.status(200).json(posts);
   } catch (error) {
-    res.status(400).json({ error: 'Error fetching posts' });
+    res.status(400).json({ error: "Error fetching posts" });
+  }
+};
+
+const getAllPostsByUser = async (req, res) => {
+  try {
+    const posts = await Post.find({ author: req.params.userId }).populate(
+      "author",
+      "username firstname lastname profileImage",
+    );
+
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(400).json({ error: "Error fetching posts" });
   }
 };
 
@@ -85,5 +101,20 @@ const modifyPost = async (req, res) => {
     res.status(400).json({ error: 'Error updating post' });
   }
 };
+    post.content = content;
+    await post.save();
 
-module.exports = { createPost, deletePost, viewPost, getAllPosts, modifyPost };
+    res.status(200).json(post);
+  } catch (error) {
+    res.status(400).json({ error: "Error updating post" });
+  }
+};
+
+module.exports = {
+  createPost,
+  deletePost,
+  viewPost,
+  getAllPosts,
+  modifyPost,
+  getAllPostsByUser,
+};
