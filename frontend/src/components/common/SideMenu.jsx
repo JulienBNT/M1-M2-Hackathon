@@ -44,7 +44,7 @@ const SideMenu = () => {
                 src={
                   currentUser?.profilePicture?.startsWith("/")
                     ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
-                    : currentUser?.profilePicture
+                    : "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fno-picture-profile&psig=AOvVaw2-Wr3YfhEpJasWlYdA0KWC&ust=1741880997904000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCPjv9MXyhIwDFQAAAAAdAAAAABAE"
                 }
                 alt="none"
                 className="w-full h-full object-cover p-0 m-0"
@@ -55,10 +55,15 @@ const SideMenu = () => {
       </div>
 
       {/* User info */}
-      <div className="pt-20 px-6 pb-4 text-center">
-        <div className="font-bold text-neutral-900 text-2xl">
-          {capitalizeWords(currentUser.username)}
+      <div className="flex-col pt-20 px-6 pb-4 text-center">
+        <div className="font-bold text-neutral-900 text-2xl mb-1">
+          {capitalizeWords(currentUser.firstname)}{" "}
+          {capitalizeWords(currentUser.lastname)}
         </div>
+        <div className="text-gray-500 text-sm mb-1 ">
+          @{capitalizeWords(currentUser.username)}
+        </div>
+
         <div className="text-base text-neutral-600">{currentUser.email}</div>
       </div>
 
