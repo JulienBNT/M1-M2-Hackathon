@@ -12,6 +12,7 @@ import ProfileLayout from "@pages/Profil/ProfilePage.jsx";
 import MyPosts from "@pages/Profil/MyPosts.jsx";
 import SavedPosts from "@pages/Profil/SavedPosts.jsx";
 import ProfileSettings from "@pages/Profil/ProfileSettings.jsx";
+import Recommend from "@pages/Recommend/Recommend.jsx";
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
+              <Route path="recommand" element={<Recommend />} />
 
               {/* Routes du profil */}
               <Route path="profile" element={<ProfileLayout />}>

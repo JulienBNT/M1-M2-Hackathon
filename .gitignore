@@ -5,3 +5,6 @@
 /frontend/node_modules
 /frontend/.env
 /frontend/package-lock.json
+/ia/dataset
+/ia/fer_env
+/ia
