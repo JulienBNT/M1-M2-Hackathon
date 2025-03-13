@@ -6,12 +6,13 @@ const Bookmark = require("../models/bookmarkModel");
 
 const createPost = async (req, res) => {
   try {
-    const { content } = req.body;
+    const { content, hashtags } = req.body;
     const author = req.user.id;
 
     const post = new Post({
       content,
       author,
+      hashtags,
     });
 
     await post.save();
@@ -41,11 +42,10 @@ const deletePost = async (req, res) => {
 
 const viewPost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id)
-      .populate("author", "username")
-      .populate("comments")
-      .populate("reposts")
-      .populate("bookmarks");
+    const post = await Post.findById(req.params.id).populate(
+      "author",
+      "username",
+    );
 
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
@@ -111,6 +111,19 @@ const getPostCountByUser = async (req, res) => {
   }
 };
 
+const getHashtagsByPostId = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    res.status(200).json({ hashtags: post.hashtags || [] });
+  } catch (error) {
+    console.error("Error fetching hashtags:", error);
+    res.status(400).json({ error: "Error fetching hashtags" });
+  }
+};
+
 module.exports = {
   createPost,
   deletePost,
@@ -119,4 +132,5 @@ module.exports = {
   modifyPost,
   getAllPostsByUser,
   getPostCountByUser,
+  getHashtagsByPostId,
 };

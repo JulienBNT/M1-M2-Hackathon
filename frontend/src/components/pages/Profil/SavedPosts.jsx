@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PostProfile from "@/components/pages/Profil/PostsProfile.jsx";
 import { FaBookmark } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const SavedPosts = () => {
   const [posts, setPosts] = useState([]);
@@ -35,7 +36,7 @@ const SavedPosts = () => {
             You can save posts that you want to revisit later
           </p>
           <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
-            Explore posts
+            <Link to={"/"}>Explore posts</Link>
           </button>
         </div>
       ) : (
