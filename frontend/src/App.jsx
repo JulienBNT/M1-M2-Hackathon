@@ -14,8 +14,30 @@ import SavedPosts from "@pages/Profil/SavedPosts.jsx";
 import ProfileSettings from "@pages/Profil/ProfileSettings.jsx";
 import Recommend from "@pages/Recommend/Recommend.jsx";
 import Future from "@pages/Future/Future.jsx";
+import io from "socket.io-client";
+import React, { useEffect } from "react";
+
+const SOCKET_ENDPOINT = "http://127.0.0.1:5000"; 
 
 const App = () => {
+
+  // connexion au websocket
+  useEffect(() => {
+    const socket = io(SOCKET_ENDPOINT);
+   
+    socket.on("connect", () => {
+      console.log("Connected to Flask SocketIO server");
+    });
+
+    socket.on("message", (data) => {
+      console.log("Socket message received:", data);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   return (
     <Router>
       <AuthProvider>
@@ -28,7 +50,7 @@ const App = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
-              <Route path="recommand" element={<Recommend />} />
+              <Route path="recommend" element={<Recommend />} />
               <Route path="future" element={<Future />} />
 
               {/* Routes du profil */}

@@ -1,6 +1,6 @@
 import time
 import json
-from flask import Flask, jsonify, send_from_directory, request
+from flask import Flask, jsonify, request
 from face_recognition import (
     start_camera,
     detect_emotion_once,
@@ -12,14 +12,14 @@ from face_recognition import (
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 
-# Initialisation Flask app, CORS, et SocketIO
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.route("/")
+def index():
+    return "Welcome to the Emotion API"
 
-# Endpoint pour commencer la camera
 @app.route("/start_camera", methods=["GET"])
 def start_camera_endpoint():
     if start_camera():
@@ -27,7 +27,6 @@ def start_camera_endpoint():
     else:
         return jsonify({"error": "Could not open camera"}), 500
 
-# Endpoint lorsqu'on clique sur le prochain post
 @app.route("/detect_emotion_once", methods=["GET"])
 def detect_emotion_endpoint():
     results = detect_emotion_once()
@@ -35,7 +34,6 @@ def detect_emotion_endpoint():
     socketio.emit("classification_update", classification)
     return jsonify(results)
 
-# Endpoint pour le recup l'emotion en temps réel
 @app.route("/emotion_data", methods=["GET"])
 def emotion_data_endpoint():
     global last_emotion_data
@@ -43,19 +41,16 @@ def emotion_data_endpoint():
         return jsonify({"num_faces": 0, "emotions": []})
     return jsonify(last_emotion_data)
 
-# Endpoint pour arreter la caméra
 @app.route("/stop_collection", methods=["GET"])
 def stop_collection_endpoint():
     results = stop_collection()
     return jsonify(results)
 
-# Endpoint pour la classification des bons et mauvais émotions
 @app.route("/latest_classification", methods=["GET"])
 def latest_classification():
     classification = classify_topics_last_snapshot(collected_emotions)
     return jsonify(classification)
 
-# Connexion WebSocket 
 @socketio.on("connect")
 def handle_connect():
     print("Client connected")
