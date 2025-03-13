@@ -17,6 +17,10 @@ import {
   bookmarkPost,
   unbookmarkPost,
   getBookmarkCount,
+  checkLikeStatus,
+  likePost,
+  unlikePost,
+  getLikeCount,
 } from "@/components/hooks/usePosts";
 
 const PostCard = ({
@@ -30,9 +34,16 @@ const PostCard = ({
   const { currentUser } = useAuth();
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
+
+  // Bookmark states
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkCount, setBookmarkCount] = useState(0);
   const [isBookmarking, setIsBookmarking] = useState(false);
+
+  // Like states
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likes || 0);
+  const [isLiking, setIsLiking] = useState(false);
 
   useEffect(() => {
     if (post && post._id) {
@@ -53,9 +64,28 @@ const PostCard = ({
           console.error("Error fetching bookmark count:", error);
         }
       };
+      const checkLike = async () => {
+        try {
+          const status = await checkLikeStatus(post._id);
+          setIsLiked(status);
+        } catch (error) {
+          console.error("Error checking like status:", error);
+        }
+      };
+
+      const fetchLikeCount = async () => {
+        try {
+          const count = await getLikeCount(post._id);
+          setLikeCount(count || post.likes || 0);
+        } catch (error) {
+          console.error("Error fetching like count:", error);
+        }
+      };
 
       checkBookmark();
       fetchBookmarkCount();
+      checkLike();
+      fetchLikeCount();
     }
   }, [post]);
 
@@ -91,6 +121,27 @@ const PostCard = ({
       console.error("Error toggling bookmark:", error);
     } finally {
       setIsBookmarking(false);
+    }
+  };
+
+  const handleLikeToggle = async () => {
+    if (!post._id || isLiking) return;
+
+    setIsLiking(true);
+    try {
+      if (isLiked) {
+        await unlikePost(post._id);
+        setIsLiked(false);
+        setLikeCount((prevCount) => Math.max(0, prevCount - 1));
+      } else {
+        await likePost(post._id);
+        setIsLiked(true);
+        setLikeCount((prevCount) => prevCount + 1);
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -164,11 +215,18 @@ const PostCard = ({
       <div className="flex justify-between border-t border-gray-100 px-4 py-3">
         <div className="flex">
           <button
-            onClick={onLike}
-            className="flex items-center space-x-1 text-gray-600 hover:text-blue-900"
+            onClick={handleLikeToggle}
+            disabled={isLiking}
+            className={`flex items-center space-x-1 ${
+              isLiked ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+            } ${isLiking ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            <FaRegThumbsUp className="w-5 h-5" />
-            <span>{post.likes}</span>
+            {isLiked ? (
+              <FaThumbsUp className="w-5 h-5" />
+            ) : (
+              <FaRegThumbsUp className="w-5 h-5" />
+            )}
+            <span>{likeCount}</span>
           </button>
           <button
             onClick={onToggleComments}

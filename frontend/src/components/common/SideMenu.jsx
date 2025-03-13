@@ -1,5 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import { FaHome, FaUser, FaBell, FaEnvelope, FaBookmark, FaBox, FaStar } from "react-icons/fa";
+import {
+  FaHome,
+  FaUser,
+  FaBell,
+  FaEnvelope,
+  FaBookmark,
+  FaBox,
+  FaUserCircle,
+  FaStar,
+} from "react-icons/fa";
 import coverImage from "@/assets/coverdefault.jpg";
 import { useAuth } from "@components/contexts/AuthContext.jsx";
 
@@ -42,15 +51,19 @@ const SideMenu = () => {
         <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
           <div className="w-24 h-24 rounded-full bg-white p-1.5">
             <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-              <img
-                src={
-                  currentUser?.profilePicture?.startsWith("/")
-                    ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
-                    : "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fno-picture-profile&psig=AOvVaw2-Wr3YfhEpJasWlYdA0KWC&ust=1741880997904000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCPjv9MXyhIwDFQAAAAAdAAAAABAE"
-                }
-                alt="none"
-                className="w-full h-full object-cover p-0 m-0"
-              />
+              {currentUser?.profilePicture ? (
+                <img
+                  src={
+                    currentUser.profilePicture?.startsWith("/")
+                      ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
+                      : currentUser.profilePicture
+                  }
+                  alt="profile picture"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <FaUserCircle className="w-full h-full text-gray-300" />
+              )}
             </div>
           </div>
         </div>

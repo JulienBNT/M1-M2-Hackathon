@@ -32,16 +32,6 @@ export async function createPost(postData) {
   }
 }
 
-export async function likePost(postId) {
-  try {
-    const response = await api.post(`/posts/${postId}/like`);
-    return response.data;
-  } catch (error) {
-    console.error("Error liking post:", error);
-    throw error;
-  }
-}
-
 export async function addComment(postId, commentText) {
   try {
     const response = await api.post(`/comments`, {
@@ -65,6 +55,7 @@ export async function deletePost(postId) {
   }
 }
 
+// Bookmarks
 export async function bookmarkPost(postId) {
   try {
     const response = await api.post(`/bookmarks/${postId}`);
@@ -112,6 +103,57 @@ export async function getBookmarkCount(postId) {
     return response.data.count;
   } catch (error) {
     console.error("Error fetching bookmark count:", error);
+    return 0;
+  }
+}
+
+// Likes
+export async function likePost(postId) {
+  try {
+    const response = await api.post(`/likes`, { postId });
+    return response.data;
+  } catch (error) {
+    console.error("Error liking post:", error);
+    throw error;
+  }
+}
+
+export async function unlikePost(postId) {
+  try {
+    const response = await api.delete(`/likes`, { data: { postId } });
+    return response.data;
+  } catch (error) {
+    console.error("Error unliking post:", error);
+    throw error;
+  }
+}
+
+export async function getUserLikes() {
+  try {
+    const response = await api.get("/likes");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching liked posts:", error);
+    throw error;
+  }
+}
+
+export async function checkLikeStatus(postId) {
+  try {
+    const likes = await getUserLikes();
+    return likes.some((like) => like.post._id === postId);
+  } catch (error) {
+    console.error("Error checking like status:", error);
+    return false;
+  }
+}
+
+export async function getLikeCount(postId) {
+  try {
+    const response = await api.get(`/likes/count/${postId}`);
+    return response.data.count;
+  } catch (error) {
+    console.error("Error fetching like count:", error);
     return 0;
   }
 }
