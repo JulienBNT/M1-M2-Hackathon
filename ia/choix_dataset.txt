@@ -1,0 +1,39 @@
+CHOIX DU DATASET :
+
+    FER2013 (kaggle.com/datasets/msambare/fer2013)
+        Avantages : 
+            léger, facilement exploitable, rapide à entraîner.
+        Inconvénients : 
+            qualité des images moyenne, risque de biais, moins de diversité dans les expressions.
+
+    AffectNet7 (kaggle.com/datasets/lintongdai/affectnet7)
+        Avantages : 
+            grande variété d’images, meilleure précision sur les émotions complexes.
+        Inconvénients : 
+            dataset énorme, difficile à manipuler sans échantillonnage. 
+
+    NOS OPTIONS MOTIVES :
+
+        Faire un échantillonnage du dataset AffectNet7
+
+            Car :
+                Meilleure qualité d’images : Moins de bruit, expressions plus réalistes.
+                Plus de diversité : Améliore la robustesse du modèle.
+                Meilleure généralisation : Réduction du risque de sur-ajustement (overfitting).
+
+            Hic ?
+                Trop volumineux, donc nécessite un échantillonnage (ex: 10 000 images équilibrées par classe).
+            
+        Utiliser FER2013 en cas de fortes contraintes 
+            Car, 
+                Plus léger et rapide à entraîner.
+            Hic ?
+                Moins précis (biais et images bruitées).
+
+    RECOMMANDATIONS
+        1 -> Sélectionner un sous-ensemble d’AffectNet7.
+        3 -> Si le temps manque, faire un fine-tuning du modèle sur FER2013 puis réajuster sur AffectNet7.
+
+
+Rappel : 
+Le fine-tuning est une technique permettant de spécialiser un modèle pré-entraîné de Machine Learning sur une tâche spécifique.

@@ -1,35 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/components/contexts/AuthContext.jsx";
+import LoginPage from "@/components/pages/Authentication/Login/LoginPage.jsx";
+import RegisterPage from "@pages/Authentication/Register/RegisterPage.jsx";
+import NotFoundPage from "@pages/error/NotFoundPage.jsx";
+import Layout from "@/components/Layout/Layout.jsx";
+import Home from "@pages/Home/Home.jsx";
+import ProtectedRoute from "@common/ProtectedRoute.jsx";
 
-function App() {
-  const [count, setCount] = useState(0)
+// Importation des composants de profil
+import ProfileLayout from "@pages/Profil/ProfilePage.jsx";
+import MyPosts from "@pages/Profil/MyPosts.jsx";
+import SavedPosts from "@pages/Profil/SavedPosts.jsx";
+import ProfileSettings from "@pages/Profil/ProfileSettings.jsx";
+import Recommend from "@pages/Recommend/Recommend.jsx";
 
+const App = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <Router>
+      <AuthProvider>
+        <Routes>
+          {/* Routes publiques */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-export default App
+          {/* Routes protégées */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="recommand" element={<Recommend />} />
+
+              {/* Routes du profil */}
+              <Route path="profile" element={<ProfileLayout />}>
+                <Route index element={<MyPosts />} />
+                <Route path="saved" element={<SavedPosts />} />
+                <Route path="settings" element={<ProfileSettings />} />
+              </Route>
+            </Route>
+          </Route>
+
+          {/* Erreur 404 */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
+};
+
+export default App;
