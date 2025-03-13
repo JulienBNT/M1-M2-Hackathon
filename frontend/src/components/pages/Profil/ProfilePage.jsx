@@ -1,11 +1,14 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@components/contexts/AuthContext.jsx";
+import { useUsers } from "@components/hooks/useUsers.js";
 
 const ProfilePage = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("");
+  const [countPosts, setCountPosts] = useState();
   const { currentUser } = useAuth();
+  const { getCountPostsByUser } = useUsers();
 
   useEffect(() => {
     const path = location.pathname;
@@ -16,7 +19,20 @@ const ProfilePage = () => {
     } else {
       setActiveTab("posts");
     }
-  }, [location]);
+
+    const fetchPostCount = async () => {
+      if (currentUser?._id) {
+        try {
+          const data = await getCountPostsByUser(currentUser._id);
+          setCountPosts(data);
+        } catch (error) {
+          console.error("Error fetching posts count:", error);
+        }
+      }
+    };
+
+    fetchPostCount();
+  }, [location, currentUser, getCountPostsByUser]);
 
   if (!currentUser) {
     return (
@@ -34,7 +50,7 @@ const ProfilePage = () => {
               src={
                 currentUser?.profilePicture?.startsWith("/")
                   ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
-                  : currentUser?.profilePicture
+                  : "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fno-picture-profile&psig=AOvVaw2-Wr3YfhEpJasWlYdA0KWC&ust=1741880997904000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCPjv9MXyhIwDFQAAAAAdAAAAABAE"
               }
               alt="profile picture"
               className="w-full h-full object-cover"
@@ -47,10 +63,10 @@ const ProfilePage = () => {
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
                   {currentUser.firstname} {currentUser.lastname}
                 </h1>
-                <p className="text-gray-500 text-sm mb-1">
+                <p className="text-gray-500 text-xl mb-1">
                   @{currentUser.username}
                 </p>
-                <p className="text-gray-600 italic">
+                <p className="text-gray-600 text-sm italic">
                   {currentUser.bio || "No bio available"}
                 </p>
               </div>
@@ -59,7 +75,7 @@ const ProfilePage = () => {
             <div className="flex justify-center md:justify-start space-x-8 md:space-x-12 mb-3">
               <div className="text-center">
                 <p className="text-xl md:text-2xl font-bold text-gray-800">
-                  12
+                  {countPosts ?? 0}
                 </p>
                 <p className="text-gray-600 text-sm">Posts</p>
               </div>

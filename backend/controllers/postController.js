@@ -85,11 +85,11 @@ const modifyPost = async (req, res) => {
     const post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
+      return res.status(404).json({ error: "Post not found" });
     }
 
     if (post.author.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
     post.content = content;
@@ -98,7 +98,16 @@ const modifyPost = async (req, res) => {
 
     res.status(200).json(post);
   } catch (error) {
-    res.status(400).json({ error: 'Error updating post' });
+    res.status(400).json({ error: "Error updating post" });
+  }
+};
+
+const getPostCountByUser = async (req, res) => {
+  try {
+    const count = await Post.countDocuments({ author: req.params.userId });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(400).json({ error: "Error counting posts" });
   }
 };
 
@@ -109,4 +118,5 @@ module.exports = {
   getAllPosts,
   modifyPost,
   getAllPostsByUser,
+  getPostCountByUser,
 };

@@ -15,6 +15,7 @@ const PostProfile = ({ post }) => {
   const toggleLike = () => {
     setLiked(!liked);
   };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-gray-100">
@@ -23,16 +24,13 @@ const PostProfile = ({ post }) => {
             <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
               {post.author.profilePicture ? (
                 <img
-                src={
-                  post.author?.profilePicture?.startsWith("/")
-                    ? `${import.meta.env.VITE_API_URL}${post?.author.profilePicture}`
-                    : post?.author.profilePicture
-                }
-                alt="profile picture"
+                  src={
+                    post.author.profilePicture.startsWith("/")
+                      ? `${import.meta.env.VITE_API_URL}${post.author.profilePicture}`
+                      : "https://img.freepik.com/free-vector/hand-drawn-side-profile-cartoon-illustration_23-2150517171.jpg?t=st=1741690774~exp=1741694374~hmac=5ddd578f5fb77fc50f0c82a4180ee1ec4004b3459c6d620b014f91aa75a60a61&w=900"
+                  }
+                  alt={post.author.name}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                  }}
                 />
               ) : (
                 <FaUserCircle className="w-full h-full text-gray-300" />

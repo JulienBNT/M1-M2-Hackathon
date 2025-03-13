@@ -25,8 +25,6 @@ export const useUsers = () => {
         },
       });
 
-      console.log("Réponse API:", response.data);
-
       if (response.data.user) {
         authService.updateUserInCookies(response.data.user);
       }
@@ -87,10 +85,20 @@ export const useUsers = () => {
     }
   };
 
+  const getCountPostsByUser = async (userId) => {
+    try {
+      const response = await api.get(`posts/count/${userId}`);
+      return response.data.count;
+    } catch (err) {
+      console.error("Error fetching user posts count:", err);
+    }
+  };
+
   return {
     updateProfile,
     updatePassword,
     deleteAccount,
+    getCountPostsByUser,
     isLoading,
     error,
     success,
