@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/contexts/AuthContext.jsx";
+import { NotificationProvider } from "@/components/contexts/NotificationContext.jsx";
 import LoginPage from "@/components/pages/Authentication/Login/LoginPage.jsx";
 import RegisterPage from "@pages/Authentication/Register/RegisterPage.jsx";
 import NotFoundPage from "@pages/error/NotFoundPage.jsx";
@@ -13,6 +14,7 @@ import MyPosts from "@pages/Profil/MyPosts.jsx";
 import SavedPosts from "@pages/Profil/SavedPosts.jsx";
 import ProfileSettings from "@pages/Profil/ProfileSettings.jsx";
 import Recommend from "@pages/Recommend/Recommend.jsx";
+import NotificationPage from "@pages/Notifications/NotificationPage.jsx";
 import Future from "@pages/Future/Future.jsx";
 import io from "socket.io-client";
 import React, { useEffect } from "react";
@@ -41,6 +43,7 @@ const App = () => {
   return (
     <Router>
       <AuthProvider>
+      <NotificationProvider>
         <Routes>
           {/* Routes publiques */}
           <Route path="/login" element={<LoginPage />} />
@@ -50,6 +53,7 @@ const App = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
+              <Route path="notifications" element={<NotificationPage />} />
               <Route path="recommend" element={<Recommend />} />
               <Route path="future" element={<Future />} />
 
@@ -65,6 +69,7 @@ const App = () => {
           {/* Erreur 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </NotificationProvider>
       </AuthProvider>
     </Router>
   );

@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
 const userRoute = require("./routes/userRoute");
 const postRoute = require("./routes/postRoute");
 const repostRoute = require("./routes/repostRoute");
@@ -41,6 +43,39 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Une erreur s'est produite !" });
 });
 
-app.listen(port, () => {
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
+
+const users = {};
+
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  socket.on("register", (userId) => {
+    console.log(`User ${userId} registered with socket ID ${socket.id}`);
+    socket.data.userId = userId;
+    socket.join(`user:${userId}`);
+  });
+
+  socket.on("disconnect", () => {
+    for (const userId in users) {
+      if (users[userId] === socket.id) {
+        delete users[userId];
+        console.log(`User ${userId} disconnected`);
+        break;
+      }
+    }
+  });
+});
+
+app.set("socketio", io);
+module.exports = io;
+
+server.listen(port, () => {
   console.log(`Serveur en cours d'exécution sur ${process.env.MONGODB_URI}`);
 });
