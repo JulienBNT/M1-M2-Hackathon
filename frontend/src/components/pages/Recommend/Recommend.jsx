@@ -5,7 +5,7 @@ import { fetchPosts } from "@/components/hooks/usePosts";
 import RefreshButton from "@/components/ui/RefreshButton"; // Correct import
 
 
-function Home() {
+function Recommend() {
   const [posts, setPosts] = useState([]);
   const [showComments, setShowComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,4 +72,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Recommend;
