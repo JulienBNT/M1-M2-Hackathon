@@ -39,12 +39,6 @@ function Home() {
     }
   };
 
-  const handleLikePost = (postIndex) => {
-    const updatedPosts = [...posts];
-    updatedPosts[postIndex].likes = (updatedPosts[postIndex].likes || 0) + 1;
-    setPosts(updatedPosts);
-  };
-
   const handleAddComment = (postIndex, commentText) => {
     const updatedPosts = [...posts];
     if (!updatedPosts[postIndex].comments) {
@@ -97,7 +91,6 @@ function Home() {
                 ...post,
                 text: post.content,
               }}
-              onLike={() => handleLikePost(index)}
               onAddComment={(commentText) =>
                 handleAddComment(index, commentText)
               }

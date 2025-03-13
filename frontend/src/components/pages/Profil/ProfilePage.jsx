@@ -1,7 +1,8 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@components/contexts/AuthContext.jsx";
 import { useUsers } from "@components/hooks/useUsers.js";
+import { FaUserCircle } from "react-icons/fa";
 
 const ProfilePage = () => {
   const location = useLocation();
@@ -46,15 +47,19 @@ const ProfilePage = () => {
       <div className="p-6 border-b border-gray-100">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           <div className="w-24 h-24 md:w-32 md:h-32 relative rounded-full overflow-hidden border-4 border-white shadow-lg">
-            <img
-              src={
-                currentUser?.profilePicture?.startsWith("/")
-                  ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
-                  : "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fno-picture-profile&psig=AOvVaw2-Wr3YfhEpJasWlYdA0KWC&ust=1741880997904000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCPjv9MXyhIwDFQAAAAAdAAAAABAE"
-              }
-              alt="profile picture"
-              className="w-full h-full object-cover"
-            />
+            {currentUser?.profilePicture ? (
+              <img
+                src={
+                  currentUser.profilePicture?.startsWith("/")
+                    ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
+                    : currentUser.profilePicture
+                }
+                alt="profile picture"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <FaUserCircle className="w-full h-full text-gray-300" />
+            )}
           </div>
 
           <div className="flex-1 text-center md:text-left">
