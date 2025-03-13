@@ -13,6 +13,7 @@ import MyPosts from "@pages/Profil/MyPosts.jsx";
 import SavedPosts from "@pages/Profil/SavedPosts.jsx";
 import ProfileSettings from "@pages/Profil/ProfileSettings.jsx";
 import Recommend from "@pages/Recommend/Recommend.jsx";
+import Future from "@pages/Future/Future.jsx";
 
 const App = () => {
   return (
@@ -28,6 +29,7 @@ const App = () => {
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="recommand" element={<Recommend />} />
+              <Route path="future" element={<Future />} />
 
               {/* Routes du profil */}
               <Route path="profile" element={<ProfileLayout />}>
