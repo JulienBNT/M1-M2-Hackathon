@@ -7,6 +7,7 @@ import {
   FaBookmark,
   FaBox,
   FaUserCircle,
+  FaStar,
 } from "react-icons/fa";
 import coverImage from "@/assets/coverdefault.jpg";
 import { useAuth } from "@components/contexts/AuthContext.jsx";
@@ -19,7 +20,8 @@ const SideMenu = () => {
     { path: "/", icon: <FaHome size={22} />, label: "Home" },
     { path: "/profile", icon: <FaUser size={22} />, label: "Profile" },
     { path: "/messages", icon: <FaEnvelope size={22} />, label: "Messages" },
-    { path: "/recommand", icon: <FaBox size={22} />, label: "Recommend Post" },
+    { path: "/recommend", icon: <FaBox size={22} />, label: "Recommend Post" },
+    { path: "/future", icon: <FaStar size={22} />, label: "Future Post" },
     {
       path: "/notifications",
       icon: <FaBell size={22} />,

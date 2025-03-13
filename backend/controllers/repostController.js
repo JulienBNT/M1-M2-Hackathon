@@ -6,7 +6,7 @@ const createRepost = async (req, res) => {
     const { content, originalPostId } = req.body;
     const author = req.user.id;
 
-    const originalPost = await Post.findById(originalPostId);
+    const originalPost = await Post.findById(originalPostId).populate('author');
     if (!originalPost) {
       return res.status(404).json({ error: 'Original post not found' });
     }
@@ -21,6 +21,15 @@ const createRepost = async (req, res) => {
 
     originalPost.reposts.push(repost._id);
     await originalPost.save();
+
+    // WebSocket notification
+    const io = req.app.get('socketio');
+    if (originalPost.author._id.toString() !== author) {
+      io.to(originalPost.author._id.toString()).emit('notification', {
+        message: `User ${req.user.username} reposted your post`,
+        postId: originalPost._id,
+      });
+    }
 
     res.status(201).json(repost);
   } catch (error) {

@@ -19,28 +19,27 @@ export async function fetchPosts() {
 
 export async function createPost(postData) {
   try {
-    const postPayload = {
-      content: postData.text,
-      hashtags: postData.hashtags || [],
+    const formData = new FormData();
+    formData.append("content", postData.text);
+
+    if (postData.hashtags && postData.hashtags.length > 0) {
+      formData.append("hashtags", JSON.stringify(postData.hashtags));
+    }
+
+    if (postData.imageFile) {
+      formData.append("image", postData.imageFile);
+    }
+
+    const config = {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     };
 
-    const response = await api.post(`/posts`, postPayload);
+    const response = await api.post(`/posts`, formData, config);
     return response.data;
   } catch (error) {
     console.error("Error creating post:", error);
-    throw error;
-  }
-}
-
-export async function addComment(postId, commentText) {
-  try {
-    const response = await api.post(`/comments`, {
-      postId,
-      content: commentText,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error adding comment:", error);
     throw error;
   }
 }
@@ -80,10 +79,14 @@ export async function getUserBookmarks(userId) {
   try {
     const url = userId ? `/bookmarks/${userId}` : "/bookmarks";
     const response = await api.get(url);
+
+    if (!response.data || response.data.length === 0) {
+      return [];
+    }
     return response.data;
   } catch (error) {
     console.error("Error fetching bookmarked posts:", error);
-    throw error;
+    return [];
   }
 }
 
@@ -155,5 +158,74 @@ export async function getLikeCount(postId) {
   } catch (error) {
     console.error("Error fetching like count:", error);
     return 0;
+  }
+}
+
+// Comments
+export async function getPostComments(postId) {
+  try {
+    const response = await api.get(`/comments/post/${postId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching post comments:", error);
+    return [];
+  }
+}
+
+export async function addComment(postId, commentText) {
+  try {
+    const response = await api.post(`/comments`, {
+      postId,
+      content: commentText,
+    });
+
+    const commentData = await api.get(`/comments/${response.data._id}`);
+    return commentData.data;
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    throw error;
+  }
+}
+
+export async function deleteComment(commentId) {
+  try {
+    await api.delete(`/comments/${commentId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    throw error;
+  }
+}
+
+export async function editComment(commentId, newContent) {
+  try {
+    const response = await api.put(`/comments/${commentId}`, {
+      content: newContent,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error editing comment:", error);
+    throw error;
+  }
+}
+
+export async function getCommentCount(postId) {
+  try {
+    const response = await api.get(`/comments/count/${postId}`);
+    return response.data.count;
+  } catch (error) {
+    console.error("Error getting comment count:", error);
+    return 0;
+  }
+}
+
+export async function replyToComment(postId, commentId, replyText) {
+  console.warn("Reply functionality requires backend implementation");
+
+  try {
+    return await addComment(postId, replyText);
+  } catch (error) {
+    console.error("Error replying to comment:", error);
+    throw error;
   }
 }

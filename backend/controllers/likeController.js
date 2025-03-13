@@ -1,5 +1,6 @@
 const Like = require("../models/likeModel");
 const Post = require("../models/postModel");
+const User = require("../models/userModel");
 
 const createLike = async (req, res) => {
   try {
@@ -17,6 +18,32 @@ const createLike = async (req, res) => {
     });
 
     await like.save();
+
+    if (post.author && post.author._id.toString() !== userId) {
+      const likingUser = await User.findById(userId);
+      
+      const io = req.app.get("socketio");
+      
+      if (io) {
+        const postContent = typeof post.content === 'string' 
+          ? post.content.substring(0, 30) + (post.content.length > 30 ? "..." : "") 
+          : "Ce post";
+        
+        const notificationContent = {
+          type: "like",
+          postId: post._id,
+          postContent: postContent,
+          userId: likingUser._id,
+          userDisplayName: likingUser.firstname || likingUser.username,
+          message: `${likingUser.firstname || likingUser.username} liked your post`,
+          timestamp: new Date()
+        };
+
+        io.to(`user:${post.author._id}`).emit("notification", notificationContent);
+        console.log(`Notification like sent to user:${post.author._id}`);
+      }
+    }
+
     res.status(201).json(like);
   } catch (error) {
     if (error.code === 11000) {

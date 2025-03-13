@@ -8,6 +8,7 @@ function Home() {
   const [posts, setPosts] = useState([]);
   const [showComments, setShowComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const { currentUser } = useAuth();
 
@@ -31,41 +32,18 @@ function Home() {
   };
 
   const handleSubmitPost = async (newPost) => {
+    setIsSubmitting(true);
     try {
       await createPost(newPost);
       await loadPosts();
+      return true; // Indiquer le succès
     } catch (error) {
       console.error("Failed to create post:", error);
+      setError("Failed to create post. Please try again.");
+      return false; // Indiquer l'échec
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const handleAddComment = (postIndex, commentText) => {
-    const updatedPosts = [...posts];
-    if (!updatedPosts[postIndex].comments) {
-      updatedPosts[postIndex].comments = [];
-    }
-
-    updatedPosts[postIndex].comments.push({
-      username: currentUser.username,
-      text: commentText,
-      likes: 0,
-      replies: [],
-    });
-    setPosts(updatedPosts);
-  };
-
-  const handleReplyComment = (postIndex, commentIndex, replyText) => {
-    const updatedPosts = [...posts];
-    if (!updatedPosts[postIndex].comments[commentIndex].replies) {
-      updatedPosts[postIndex].comments[commentIndex].replies = [];
-    }
-
-    updatedPosts[postIndex].comments[commentIndex].replies.push({
-      username: currentUser.username,
-      text: replyText,
-      likes: 0,
-    });
-    setPosts(updatedPosts);
   };
 
   const toggleComments = (postIndex) => {
@@ -78,10 +56,16 @@ function Home() {
     <div className="flex flex-col items-center p-4 space-y-4 w-full max-w-2xl mx-auto">
       <PostForm onSubmitPost={handleSubmitPost} />
 
+      {error && (
+        <div className="w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
       <div className="w-full space-y-4">
         {isLoading && posts.length === 0 ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-800 mx-auto"></div>
           </div>
         ) : posts.length > 0 ? (
           posts.map((post, index) => (
@@ -89,14 +73,9 @@ function Home() {
               key={post._id || index}
               post={{
                 ...post,
-                text: post.content,
+                text: post.content || post.text,
+                image: post.image,
               }}
-              onAddComment={(commentText) =>
-                handleAddComment(index, commentText)
-              }
-              onReplyComment={(commentIndex, replyText) =>
-                handleReplyComment(index, commentIndex, replyText)
-              }
               showCommentsState={showComments[index]}
               onToggleComments={() => toggleComments(index)}
             />

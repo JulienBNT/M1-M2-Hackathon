@@ -1,12 +1,13 @@
 const Bookmark = require("../models/bookmarkModel");
 const Post = require("../models/postModel");
+const User = require("../models/userModel");
 
 const addBookmark = async (req, res) => {
   try {
     const postId = req.params.postId;
     const userId = req.user.id;
 
-    const post = await Post.findById(postId);
+    const post = await Post.findById(postId).populate("author");
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
@@ -26,6 +27,31 @@ const addBookmark = async (req, res) => {
     });
 
     await bookmark.save();
+
+    if (post.author && post.author._id.toString() !== userId) {
+      const bookmarkingUser = await User.findById(userId);
+      
+      const io = req.app.get("socketio");
+      
+      if (io) {
+        const postContent = typeof post.content === 'string' 
+          ? post.content.substring(0, 30) + (post.content.length > 30 ? "..." : "") 
+          : "Ce post";
+        
+        const notificationContent = {
+          type: "bookmark",
+          postId: post._id,
+          postContent: postContent,
+          userId: bookmarkingUser._id,
+          userDisplayName: bookmarkingUser.firstname || bookmarkingUser.username,
+          message: `${bookmarkingUser.firstname || bookmarkingUser.username} bookmarked your post`,
+          timestamp: new Date()
+        };
+
+        io.to(`user:${post.author._id}`).emit("notification", notificationContent);
+        console.log(`Notification sent to user:${post.author._id}`);
+      }
+    }
     res.status(201).json({ message: "Post bookmarked successfully" });
   } catch (error) {
     console.error("Error adding bookmark:", error);
