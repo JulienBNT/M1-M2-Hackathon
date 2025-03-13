@@ -89,12 +89,28 @@ VITE_API_URL=http://localhost:8080/
 
 ### Running the Application
 
-#### Backend
+#### Backend APP
 
 cd backend
 npm start  # Uses nodemon for development
 
 The server will run on http://localhost:8080
+
+#### Backend AI
+
+cd IA
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+and then on the compressed .keras file, add the model in the same folder
+then start the AI backend
+python app.py
+
+
+The server will run on [http://localhost:8080](http://localhost:5000/)
+
+(if there are issues on tensorflow, you might want to downgrade your python venv)
 
 #### Frontend
 
