@@ -2,12 +2,7 @@ import React, { useState, useEffect } from "react";
 import PostForm from "@/components/post/PostForm";
 import PostCard from "@/components/post/PostCard";
 import { useAuth } from "@/components/contexts/AuthContext";
-import {
-  fetchPosts,
-  createPost,
-  likePost,
-  addComment,
-} from "@/components/hooks/usePosts";
+import { fetchPosts, createPost } from "@/components/hooks/usePosts";
 
 function Home() {
   const [posts, setPosts] = useState([]);
