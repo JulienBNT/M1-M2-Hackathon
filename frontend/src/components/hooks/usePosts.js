@@ -64,3 +64,54 @@ export async function deletePost(postId) {
     throw error;
   }
 }
+
+export async function bookmarkPost(postId) {
+  try {
+    const response = await api.post(`/bookmarks/${postId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error bookmarking post:", error);
+    throw error;
+  }
+}
+
+export async function unbookmarkPost(postId) {
+  try {
+    const response = await api.delete(`/bookmarks/${postId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error removing bookmark:", error);
+    throw error;
+  }
+}
+
+export async function getUserBookmarks(userId) {
+  try {
+    const url = userId ? `/bookmarks/${userId}` : "/bookmarks";
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching bookmarked posts:", error);
+    throw error;
+  }
+}
+
+export async function checkBookmarkStatus(postId) {
+  try {
+    const response = await api.get(`/bookmarks/${postId}/status`);
+    return response.data.isBookmarked;
+  } catch (error) {
+    console.error("Error checking bookmark status:", error);
+    return false;
+  }
+}
+
+export async function getBookmarkCount(postId) {
+  try {
+    const response = await api.get(`/bookmarks/${postId}/count`);
+    return response.data.count;
+  } catch (error) {
+    console.error("Error fetching bookmark count:", error);
+    return 0;
+  }
+}

@@ -1,13 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FaUserCircle,
   FaThumbsUp,
   FaComment,
   FaEllipsisH,
+  FaRegThumbsUp,
+  FaRegComment,
+  FaRegBookmark,
+  FaBookmark,
 } from "react-icons/fa";
 import { formatDate } from "@/components/utils/dateUtils";
 import { useAuth } from "@/components/contexts/AuthContext";
+import {
+  checkBookmarkStatus,
+  bookmarkPost,
+  unbookmarkPost,
+  getBookmarkCount,
+} from "@/components/hooks/usePosts";
 
 const PostCard = ({
   post,
@@ -20,6 +30,34 @@ const PostCard = ({
   const { currentUser } = useAuth();
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkCount, setBookmarkCount] = useState(0);
+  const [isBookmarking, setIsBookmarking] = useState(false);
+
+  useEffect(() => {
+    if (post && post._id) {
+      const checkBookmark = async () => {
+        try {
+          const status = await checkBookmarkStatus(post._id);
+          setIsBookmarked(status);
+        } catch (error) {
+          console.error("Error checking bookmark status:", error);
+        }
+      };
+
+      const fetchBookmarkCount = async () => {
+        try {
+          const count = await getBookmarkCount(post._id);
+          setBookmarkCount(count);
+        } catch (error) {
+          console.error("Error fetching bookmark count:", error);
+        }
+      };
+
+      checkBookmark();
+      fetchBookmarkCount();
+    }
+  }, [post]);
 
   const handleAddComment = () => {
     if (commentText.trim()) {
@@ -35,13 +73,34 @@ const PostCard = ({
     }
   };
 
+  const handleBookmarkToggle = async () => {
+    if (!post._id || isBookmarking) return;
+
+    setIsBookmarking(true);
+    try {
+      if (isBookmarked) {
+        await unbookmarkPost(post._id);
+        setIsBookmarked(false);
+        setBookmarkCount((prevCount) => Math.max(0, prevCount - 1));
+      } else {
+        await bookmarkPost(post._id);
+        setIsBookmarked(true);
+        setBookmarkCount((prevCount) => prevCount + 1);
+      }
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+    } finally {
+      setIsBookmarking(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
       {post && (
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
-              {post.author.profilePicture ? (
+              {post.author?.profilePicture ? (
                 <img
                   src={
                     post.author?.profilePicture?.startsWith("/")
@@ -57,16 +116,18 @@ const PostCard = ({
             </div>
             <div>
               <Link
-                to={`/profile/${post.author.username}`}
+                to={`/profile/${post.author?.username}`}
                 className="font-semibold text-gray-800 hover:underline"
               >
-                {post.author.name}
+                {post.author?.name}
               </Link>
               <div className="flex gap-2 items-center">
                 <p className="text-md text-black-600 font-bold">
-                  {post.author.firstname} {post.author.lastname}
+                  {post.author?.firstname} {post.author?.lastname}
                 </p>
-                <p className="text-sm text-gray-500">@{post.author.username}</p>
+                <p className="text-sm text-gray-500">
+                  @{post.author?.username}
+                </p>
               </div>
               <p className="text-xs text-gray-500">
                 {formatDate(post.createdAt)}
@@ -92,7 +153,7 @@ const PostCard = ({
         {post.hashtags && post.hashtags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {post.hashtags.map((tag, idx) => (
-              <span key={idx} className="text-blue-600 text-sm">
+              <span key={idx} className="text-blue-800 text-sm">
                 #{tag}
               </span>
             ))}
@@ -100,27 +161,45 @@ const PostCard = ({
         )}
       </div>
 
-      <div className="flex border-t border-gray-100 px-4 py-3">
-        <button
-          onClick={onLike}
-          className="flex items-center space-x-1 text-gray-600 hover:text-blue-600"
-        >
-          <FaThumbsUp className="w-5 h-5" />
-          <span>{post.likes}</span>
-          <span>Like</span>
-        </button>
-        <button
-          onClick={onToggleComments}
-          className="flex items-center space-x-2 ml-4 text-gray-600 hover:text-blue-600"
-        >
-          <FaComment className="w-5 h-5" />
-          <span>Comment</span>
-        </button>
+      <div className="flex justify-between border-t border-gray-100 px-4 py-3">
+        <div className="flex">
+          <button
+            onClick={onLike}
+            className="flex items-center space-x-1 text-gray-600 hover:text-blue-900"
+          >
+            <FaRegThumbsUp className="w-5 h-5" />
+            <span>{post.likes}</span>
+          </button>
+          <button
+            onClick={onToggleComments}
+            className="flex items-center space-x-2 ml-4 text-gray-600 hover:text-blue-900"
+          >
+            <FaRegComment className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="flex">
+          <button
+            onClick={handleBookmarkToggle}
+            disabled={isBookmarking}
+            className={`flex items-center space-x-1 ${
+              isBookmarked
+                ? "text-orange-400"
+                : "text-gray-600 hover:text-orange-500"
+            } ${isBookmarking ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {isBookmarked ? (
+              <FaBookmark className="w-5 h-5" />
+            ) : (
+              <FaRegBookmark className="w-5 h-5" />
+            )}
+            {bookmarkCount > 0 && <span>{bookmarkCount}</span>}
+          </button>
+        </div>
       </div>
 
       {showCommentsState && (
         <div className="border-t border-gray-100 p-4 space-y-3">
-          {post.comments.map((comment, commentIndex) => (
+          {post.comments?.map((comment, commentIndex) => (
             <div
               key={commentIndex}
               className="border-b border-gray-100 pb-3 last:border-0 last:pb-0"
