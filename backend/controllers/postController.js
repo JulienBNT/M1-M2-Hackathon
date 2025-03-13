@@ -59,7 +59,9 @@ const viewPost = async (req, res) => {
 
 const getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find().populate("author", "username");
+    const posts = await Post.find()
+      .populate("author", "username firstname lastname profilePicture")
+      .sort("-createdAt");
     res.status(200).json(posts);
   } catch (error) {
     res.status(400).json({ error: "Error fetching posts" });

@@ -3,6 +3,7 @@ import PostProfile from "@/components/pages/Profil/PostsProfile.jsx";
 import { FaPlusCircle } from "react-icons/fa";
 import { getAllUserPosts } from "@components/hooks/usePosts.js";
 import { useAuth } from "@components/contexts/AuthContext.jsx";
+import { Link } from "react-router-dom";
 
 const MyPosts = () => {
   const { currentUser } = useAuth();
