@@ -21,11 +21,11 @@ mongoose
   .then(() => console.log("MongoDB connecté..."))
   .catch((err) => console.error("Erreur de connexion MongoDB:", err));
 
-app.use(cors(
-  {
+app.use(
+  cors({
     origin: "http://localhost:5173",
-  }
-))
+  }),
+);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -42,5 +42,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(port, () => {
-  console.log(`Serveur en cours d'exécution sur http://127.0.0.1:${port}`);
+  console.log(`Serveur en cours d'exécution sur ${process.env.MONGODB_URI}`);
 });
