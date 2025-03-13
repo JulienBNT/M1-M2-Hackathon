@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaCamera,
   FaUserCircle,
@@ -20,7 +20,7 @@ const ProfileSettings = () => {
     setError,
     setSuccess,
   } = useUsers();
-
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [formData, setFormData] = useState({
     lastname: currentUser?.lastname || "",
     firstname: currentUser?.firstname || "",
@@ -144,6 +144,18 @@ const ProfileSettings = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (showPasswordModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [showPasswordModal]);
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -338,13 +350,103 @@ const ProfileSettings = () => {
           Update your password regularly to keep your account secure.
         </p>
 
-        <button
-          type="button"
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-          onClick={() => setShowPasswordModal(true)}
-        >
-          Change your password
-        </button>
+        {!showPasswordForm ? (
+          <button
+            type="button"
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            onClick={() => setShowPasswordForm(true)}
+          >
+            Change your password
+          </button>
+        ) : (
+          <div className="mt-4 border-t pt-4">
+            <h4 className="text-md font-medium text-gray-800 mb-4">
+              Change Password
+            </h4>
+            <form onSubmit={handlePasswordSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="currentPassword"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Current password
+                  </label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    id="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="newPassword"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    New password
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    id="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    minLength="8"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Minimum characters: 8
+                  </p>
+                </div>
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Confirm new password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    id="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordForm(false);
+                    setPasswordData({
+                      currentPassword: "",
+                      newPassword: "",
+                      confirmPassword: "",
+                    });
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-70"
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       <div className="bg-red-50 p-6 rounded-lg border border-red-200">
@@ -366,96 +468,6 @@ const ProfileSettings = () => {
           Delete Account
         </button>
       </div>
-
-      {showPasswordModal && (
-        <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full"
-          id="password-modal"
-        >
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3 text-center">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Password Change
-              </h3>
-              <form className="mt-4" onSubmit={handlePasswordSubmit}>
-                <div className="mt-2 text-left">
-                  <div className="mb-4">
-                    <label
-                      htmlFor="currentPassword"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Current password
-                    </label>
-                    <input
-                      type="password"
-                      name="currentPassword"
-                      id="currentPassword"
-                      value={passwordData.currentPassword}
-                      onChange={handlePasswordChange}
-                      required
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="newPassword"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      New password
-                    </label>
-                    <input
-                      type="password"
-                      name="newPassword"
-                      id="newPassword"
-                      value={passwordData.newPassword}
-                      onChange={handlePasswordChange}
-                      required
-                      minLength="8"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Minimum characters: 8
-                    </p>
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="confirmPassword"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Confirm new password
-                    </label>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      id="confirmPassword"
-                      value={passwordData.confirmPassword}
-                      onChange={handlePasswordChange}
-                      required
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-                    />
-                  </div>
-                </div>
-                <div className="items-center mt-5 flex justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswordModal(false)}
-                    className="px-4 py-2 bg-white text-gray-700 rounded-md border border-gray-300 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-70"
-                    disabled={isSaving}
-                  >
-                    {isSaving ? "Updating..." : "Update"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
