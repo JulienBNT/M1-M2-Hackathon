@@ -17,26 +17,25 @@ import Future from "@pages/Future/Future.jsx";
 import io from "socket.io-client";
 import React, { useEffect } from "react";
 
-const SOCKET_ENDPOINT = "http://127.0.0.1:5000"; 
+const SOCKET_ENDPOINT = "http://127.0.0.1:5000";
 
 const App = () => {
-
-  // connexion au websocket
-  useEffect(() => {
-    const socket = io(SOCKET_ENDPOINT);
-   
-    socket.on("connect", () => {
-      console.log("Connected to Flask SocketIO server");
-    });
-
-    socket.on("message", (data) => {
-      console.log("Socket message received:", data);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
+  // // connexion au websocket
+  // useEffect(() => {
+  //   const socket = io(SOCKET_ENDPOINT);
+  //
+  //   socket.on("connect", () => {
+  //     console.log("Connected to Flask SocketIO server");
+  //   });
+  //
+  //   socket.on("message", (data) => {
+  //     console.log("Socket message received:", data);
+  //   });
+  //
+  //   return () => {
+  //     socket.disconnect();
+  //   };
+  // }, []);
 
   return (
     <Router>

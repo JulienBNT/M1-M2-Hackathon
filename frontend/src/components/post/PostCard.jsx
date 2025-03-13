@@ -57,6 +57,24 @@ const PostCard = ({ post, showCommentsState, onToggleComments }) => {
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [replyingToComment, setReplyingToComment] = useState(null);
 
+  // Fonction pour formater correctement les URLs d'images
+  const formatImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+
+    // Si c'est déjà une URL complète (commençant par http ou https)
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+      return imagePath;
+    }
+
+    // Si c'est un chemin relatif, ajouter l'URL de base de l'API
+    if (imagePath.startsWith("/")) {
+      return `${import.meta.env.VITE_API_URL}${imagePath}`;
+    }
+
+    // Si c'est un chemin sans slash de début, ajouter un slash
+    return `${import.meta.env.VITE_API_URL}/${imagePath}`;
+  };
+
   useEffect(() => {
     if (post && post._id) {
       // Bookmark checks
@@ -183,13 +201,38 @@ const PostCard = ({ post, showCommentsState, onToggleComments }) => {
 
     setIsAddingComment(true);
     try {
-      await addPostComment(post._id, commentText);
+      // Ajouter le commentaire
+      const newComment = await addPostComment(post._id, commentText);
 
+      // Soit récupérer tous les commentaires à nouveau
       await fetchComments();
 
-      setCommentCount((prev) => prev + 1);
+      // Soit ajouter le nouveau commentaire directement à la liste (optimisation)
+      /*
+      if (newComment) {
+        // Si l'API retourne l'auteur avec le commentaire
+        if (newComment.author) {
+          setComments([...comments, newComment]);
+        } else {
+          // Si l'API ne retourne pas l'auteur, utiliser l'utilisateur actuel
+          const commentWithAuthor = {
+            ...newComment,
+            author: currentUser,
+            replies: []
+          };
+          setComments([...comments, commentWithAuthor]);
+        }
 
+        // Mise à jour du compteur de commentaires
+        setTotalCommentsCount(prevCount => prevCount + 1);
+      }
+      */
+
+      // Vider le champ de commentaire
       setCommentText("");
+
+      // Mettre à jour le compteur
+      setCommentCount((prev) => prev + 1);
     } catch (error) {
       console.error("Error adding comment:", error);
     } finally {
@@ -302,11 +345,7 @@ const PostCard = ({ post, showCommentsState, onToggleComments }) => {
           <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
             {comment.author?.profilePicture ? (
               <img
-                src={
-                  comment.author.profilePicture.startsWith("/")
-                    ? `${import.meta.env.VITE_API_URL}${comment.author.profilePicture}`
-                    : "https://img.freepik.com/free-vector/hand-drawn-side-profile-cartoon-illustration_23-2150517171.jpg?t=st=1741690774~exp=1741694374~hmac=5ddd578f5fb77fc50f0c82a4180ee1ec4004b3459c6d620b014f91aa75a60a61&w=900"
-                }
+                src={formatImageUrl(comment.author.profilePicture)}
                 alt="profile picture"
                 className="w-full h-full object-cover"
               />
@@ -406,11 +445,7 @@ const PostCard = ({ post, showCommentsState, onToggleComments }) => {
             <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
               {post.author?.profilePicture ? (
                 <img
-                  src={
-                    post.author?.profilePicture?.startsWith("/")
-                      ? `${import.meta.env.VITE_API_URL}${post?.author.profilePicture}`
-                      : "https://img.freepik.com/free-vector/hand-drawn-side-profile-cartoon-illustration_23-2150517171.jpg?t=st=1741690774~exp=1741694374~hmac=5ddd578f5fb77fc50f0c82a4180ee1ec4004b3459c6d620b014f91aa75a60a61&w=900"
-                  }
+                  src={formatImageUrl(post.author.profilePicture)}
                   alt="profile picture"
                   className="w-full h-full object-cover"
                 />
@@ -445,13 +480,22 @@ const PostCard = ({ post, showCommentsState, onToggleComments }) => {
       )}
 
       <div className="p-4">
-        <p className="text-gray-800 mb-4">{post.text}</p>
+        <p className="text-gray-800 mb-4">{post.text || post.content}</p>
+
+        {/* Correction pour l'affichage des images */}
         {post.image && (
-          <img
-            src={post.image}
-            alt="Post"
-            className="w-full rounded-lg object-cover"
-          />
+          <div className="mt-2 mb-4">
+            <img
+              src={formatImageUrl(post.image)}
+              alt="Post content"
+              className="w-full rounded-lg object-cover max-h-96"
+              onError={(e) => {
+                console.error("Erreur de chargement de l'image:", post.image);
+                e.target.onerror = null;
+                e.target.style.display = "none";
+              }}
+            />
+          </div>
         )}
 
         {post.hashtags && post.hashtags.length > 0 && (
@@ -516,11 +560,7 @@ const PostCard = ({ post, showCommentsState, onToggleComments }) => {
             <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
               {currentUser?.profilePicture ? (
                 <img
-                  src={
-                    currentUser.profilePicture?.startsWith("/")
-                      ? `${import.meta.env.VITE_API_URL}${currentUser.profilePicture}`
-                      : "https://img.freepik.com/free-vector/hand-drawn-side-profile-cartoon-illustration_23-2150517171.jpg?t=st=1741690774~exp=1741694374~hmac=5ddd578f5fb77fc50f0c82a4180ee1ec4004b3459c6d620b014f91aa75a60a61&w=900"
-                  }
+                  src={formatImageUrl(currentUser.profilePicture)}
                   alt="profile picture"
                   className="w-full h-full object-cover"
                 />

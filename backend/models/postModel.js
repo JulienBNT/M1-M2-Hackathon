@@ -1,39 +1,46 @@
 const mongoose = require("mongoose");
 
-const postSchema = new mongoose.Schema({
-  content: {
-    type: String,
-    required: true,
-    maxlength: 280,
-  },
-  author: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  comments: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
-      default: [],
-    },
-  ],
-  hashtags: [
-    {
+const postSchema = new mongoose.Schema(
+  {
+    content: {
       type: String,
+      required: true,
+    },
+    image: {
+      type: String,
+      default: null,
+    },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    hashtags: {
+      type: [String],
       default: [],
     },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    // Ajout du champ comments qui manquait
+    comments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+      },
+    ],
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
+  {
+    timestamps: true,
   },
+);
+
+postSchema.virtual("text").get(function () {
+  return this.content;
 });
 
-const Post = mongoose.model("Post", postSchema);
+postSchema.set("toJSON", { virtuals: true });
+postSchema.set("toObject", { virtuals: true });
 
-module.exports = Post;
+module.exports = mongoose.model("Post", postSchema);

@@ -3,22 +3,86 @@ const User = require("../models/userModel");
 const Comment = require("../models/commentModel");
 const Repost = require("../models/repostModel");
 const Bookmark = require("../models/bookmarkModel");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, "../public/uploads/posts");
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, "post-" + uniqueSuffix + ext);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Seules les images sont autorisées!"), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB max
+  },
+});
+
+const uploadSingleImage = upload.single("image");
 
 const createPost = async (req, res) => {
   try {
-    const { content, hashtags } = req.body;
-    const author = req.user.id;
+    uploadSingleImage(req, res, async function (err) {
+      if (err instanceof multer.MulterError) {
+        return res
+          .status(400)
+          .json({ error: `Erreur d'upload: ${err.message}` });
+      } else if (err) {
+        return res.status(400).json({ error: err.message });
+      }
 
-    const post = new Post({
-      content,
-      author,
-      hashtags,
+      let { content, hashtags } = req.body;
+      const author = req.user.id;
+
+      if (typeof hashtags === "string") {
+        try {
+          hashtags = JSON.parse(hashtags);
+        } catch (e) {
+          hashtags = [];
+        }
+      }
+
+      const postData = {
+        content,
+        author,
+        hashtags: hashtags || [],
+      };
+
+      if (req.file) {
+        const relativePath = `/uploads/posts/${req.file.filename}`;
+        postData.image = relativePath;
+      }
+
+      const post = new Post(postData);
+      await post.save();
+
+      res.status(201).json(post);
     });
-
-    await post.save();
-    res.status(201).json(post);
   } catch (error) {
-    res.status(400).json({ error: "Error creating post" });
+    console.error("Erreur lors de la création du post:", error);
+    res.status(500).json({ error: "Erreur lors de la création du post" });
   }
 };
 
@@ -29,8 +93,17 @@ const deletePost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
+
     if (post.author.toString() !== req.user.id) {
       return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Supprimer l'image associée si elle existe
+    if (post.image) {
+      const imagePath = path.join(__dirname, "../public", post.image);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
     }
 
     await post.deleteOne();
@@ -83,7 +156,6 @@ const getAllPostsByUser = async (req, res) => {
 
 const modifyPost = async (req, res) => {
   try {
-    const { content } = req.body;
     const post = await Post.findById(req.params.id);
 
     if (!post) {
@@ -94,12 +166,52 @@ const modifyPost = async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    post.content = content;
-    post.updatedAt = Date.now();
-    await post.save();
+    // Utiliser multer pour gérer les mises à jour d'image
+    uploadSingleImage(req, res, async function (err) {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
 
-    res.status(200).json(post);
+      // Mettre à jour le contenu si fourni
+      if (req.body.content) {
+        post.content = req.body.content;
+      }
+
+      // Mettre à jour les hashtags si fournis
+      if (req.body.hashtags) {
+        let hashtags = req.body.hashtags;
+        if (typeof hashtags === "string") {
+          try {
+            hashtags = JSON.parse(hashtags);
+          } catch (e) {
+            hashtags = [];
+          }
+        }
+        post.hashtags = hashtags;
+      }
+
+      // Mettre à jour l'image si une nouvelle est fournie
+      if (req.file) {
+        // Supprimer l'ancienne image si elle existe
+        if (post.image) {
+          const oldImagePath = path.join(__dirname, "../public", post.image);
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        }
+
+        // Définir le nouveau chemin d'image
+        const relativePath = `/uploads/posts/${req.file.filename}`;
+        post.image = relativePath;
+      }
+
+      post.updatedAt = Date.now();
+      await post.save();
+
+      res.status(200).json(post);
+    });
   } catch (error) {
+    console.error("Error updating post:", error);
     res.status(400).json({ error: "Error updating post" });
   }
 };

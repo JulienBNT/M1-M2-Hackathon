@@ -6,30 +6,43 @@ const PostForm = ({ onSubmitPost }) => {
   const { currentUser } = useAuth();
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [hashtags, setHashtags] = useState([]);
   const [hashtagInput, setHashtagInput] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Store both the file and the preview URL
+      setImageFile(file);
       setImage(URL.createObjectURL(file));
     }
   };
 
-  const addNewPost = () => {
-    if (text || image) {
-      const newPost = {
-        text,
-        hashtags,
-        image,
-      };
+  const addNewPost = async () => {
+    if ((text || image) && !isSubmitting) {
+      setIsSubmitting(true);
 
-      onSubmitPost(newPost);
+      try {
+        const newPost = {
+          text,
+          hashtags,
+          imageFile,
+        };
 
-      setText("");
-      setImage(null);
-      setHashtags([]);
-      setHashtagInput("");
+        await onSubmitPost(newPost);
+
+        setText("");
+        setImage(null);
+        setImageFile(null);
+        setHashtags([]);
+        setHashtagInput("");
+      } catch (error) {
+        console.error("Error creating post:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -120,7 +133,10 @@ const PostForm = ({ onSubmitPost }) => {
             className="w-full object-cover rounded-md"
           />
           <button
-            onClick={() => setImage(null)}
+            onClick={() => {
+              setImage(null);
+              setImageFile(null);
+            }}
             className="absolute top-2 right-2 bg-gray-800 bg-opacity-60 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-opacity-80"
             aria-label="Remove image"
           >
@@ -144,10 +160,14 @@ const PostForm = ({ onSubmitPost }) => {
         </label>
         <button
           onClick={addNewPost}
-          className="px-8 py-3 rounded-full bg-blue-800 text-white font-medium text-lg hover:bg-blue-900 transition-colors"
-          disabled={!text && !image}
+          className={`px-8 py-3 rounded-full ${
+            isSubmitting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-800 hover:bg-blue-900 transition-colors"
+          } text-white font-medium text-lg`}
+          disabled={(!text && !image) || isSubmitting}
         >
-          Post
+          {isSubmitting ? "Posting..." : "Post"}
         </button>
       </div>
     </div>
