@@ -27,6 +27,7 @@ const App = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
+              <Route path="recommand" element={<Recommend />} />
 
               {/* Routes du profil */}
               <Route path="profile" element={<ProfileLayout />}>
@@ -34,7 +35,6 @@ const App = () => {
                 <Route path="saved" element={<SavedPosts />} />
                 <Route path="settings" element={<ProfileSettings />} />
               </Route>
-              <Route path="recommand" element={<Recommend />} />
             </Route>
           </Route>
 
