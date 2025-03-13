@@ -61,7 +61,7 @@ const MyPosts = () => {
             Share your thoughts, experiences, and updates with your followers.
           </p>
           <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-            Create a post
+            <Link to={"/"}>Create a post</Link>
           </button>
         </div>
       ) : (
