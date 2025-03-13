@@ -79,10 +79,14 @@ export async function getUserBookmarks(userId) {
   try {
     const url = userId ? `/bookmarks/${userId}` : "/bookmarks";
     const response = await api.get(url);
+
+    if (!response.data || response.data.length === 0) {
+      return [];
+    }
     return response.data;
   } catch (error) {
     console.error("Error fetching bookmarked posts:", error);
-    throw error;
+    return [];
   }
 }
 
