@@ -1,23 +1,35 @@
+// src/pages/Recommended.jsx
 import React, { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 import PostCard from "@/components/post/PostCard";
 import { useAuth } from "@/components/contexts/AuthContext";
 import { fetchPosts } from "@/components/hooks/usePosts";
 import RefreshButton from "@/components/ui/RefreshButton";
 
+const socket = io("http://127.0.0.1:5000");
+
 function Recommend() {
   const [posts, setPosts] = useState([]);
   const [classification, setClassification] = useState(null);
-  const [showComments, setShowComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const { currentUser } = useAuth();
+
+  useEffect(() => {
+    socket.on("classification_update", (data) => {
+      setClassification(data);
+    });
+    return () => {
+      socket.off("classification_update");
+    };
+  }, []);
 
   useEffect(() => {
     if (currentUser) {
       loadPosts();
       loadClassification();
     } else {
-      setError("You need to be logged in to view posts.");
+      setError("Vous devez être connecté pour voir les posts.");
     }
   }, [currentUser]);
 
@@ -27,18 +39,16 @@ function Recommend() {
     try {
       const fetchedPosts = await fetchPosts();
       if (currentUser && currentUser.username) {
-        // Remove posts by the current user
-        const filteredPosts = fetchedPosts.filter(
+        const otherPosts = fetchedPosts.filter(
           (post) => post.author?.username !== currentUser.username
         );
-        setPosts(filteredPosts || []);
-        setShowComments(new Array(filteredPosts.length).fill(false));
+        setPosts(otherPosts);
       } else {
-        setError("Current user data is missing.");
+        setError("Les données utilisateur sont manquantes.");
       }
     } catch (err) {
-      console.error("Error loading posts:", err);
-      setError("Failed to load posts. Please try again later.");
+      console.error("Erreur de chargement des posts:", err);
+      setError("Impossible de charger les posts. Veuillez réessayer plus tard.");
     } finally {
       setIsLoading(false);
     }
@@ -46,46 +56,37 @@ function Recommend() {
 
   const loadClassification = async () => {
     try {
-      const response = await fetch("http://localhost:5000/stop_collection");
+      const response = await fetch("http://127.0.0.1:5000/latest_classification");
       const data = await response.json();
-      // Assumes your API returns a "classification" field
-      setClassification(data.classification);
+      setClassification(data);
     } catch (err) {
-      console.error("Error loading classification:", err);
-      setError("Failed to load classification.");
+      console.error("Erreur lors du chargement de la classification:", err);
+      setError("Impossible de charger la classification.");
     }
   };
 
-  const toggleComments = (postIndex) => {
-    const updatedShowComments = [...showComments];
-    updatedShowComments[postIndex] = !updatedShowComments[postIndex];
-    setShowComments(updatedShowComments);
-  };
-
-  // Filter out posts that have any hashtag that appears in the bad_topics
+  // Only include posts that have at least one hashtag classified as "good".
   const recommendedPosts =
-    classification && classification.bad_topics
+    classification && classification.good_hashtags
       ? posts.filter((post) => {
-          if (!post.hashtags || post.hashtags.length === 0) return true;
-          return !post.hashtags.some(tag =>
-            classification.bad_topics.hasOwnProperty(tag.toLowerCase())
-          );
+          if (post.hashtags && post.hashtags.length > 0) {
+            return post.hashtags.some((tag) =>
+              classification.good_hashtags.hasOwnProperty(`#${tag.toLowerCase()}`)
+            );
+          }
+          return false;
         })
-      : posts;
+      : [];
 
   return (
     <div className="flex flex-col items-center p-4 space-y-4 w-full max-w-2xl mx-auto">
-      {currentUser && currentUser.firstname && currentUser.lastname && (
-        <div className="w-full p-4 bg-blue-100 rounded-md shadow-md mb-6">
-          <h2 className="text-xl font-semibold text-blue-800">
-            Recommended Posts
-          </h2>
-        </div>
-      )}
+      <div className="w-full p-4 bg-blue-100 rounded-md shadow-md mb-6">
+        <h2 className="text-xl font-semibold text-blue-800">Recommended Posts</h2>
+      </div>
       <div className="w-full space-y-4">
         {isLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <div className="text-center py-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-800 mx-auto"></div>
           </div>
         ) : error ? (
           <div className="text-center py-8 text-red-500">{error}</div>
@@ -94,27 +95,25 @@ function Recommend() {
             <PostCard
               key={post._id || index}
               post={{ ...post, text: post.content }}
-              showCommentsState={showComments[index]}
-              onToggleComments={() => toggleComments(index)}
+              showCommentsState={true}
             />
           ))
         ) : (
           <div className="text-center py-8 text-gray-500">
-            No recommended posts.
+            Aucun post recommandé. Soyez le premier à publier !
           </div>
         )}
       </div>
-      <div className="w-full flex justify-center mt-6">
+      <div className="w-full flex justify-center mt-8">
         <RefreshButton
           onClick={() => {
             loadPosts();
             loadClassification();
           }}
-          className="px-4 py-2"
+          className="px-6 py-4 text-xl"
         />
       </div>
     </div>
   );
 }
-
 export default Recommend;
