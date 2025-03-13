@@ -17,8 +17,23 @@ const MyPosts = () => {
       try {
         setLoading(true);
         const userPosts = await getAllUserPosts(currentUser._id);
-        setPosts(userPosts);
+
+        const formattedPosts = userPosts
+          .filter((post) => post) // Filtrer les posts nuls ou undefined
+          .map((post) => ({
+            ...post,
+            text: post.content || post.text,
+            content: post.content || post.text,
+          }));
+
+        // Trier les posts du plus récent au plus ancien
+        const sortedPosts = formattedPosts.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+
+        setPosts(sortedPosts);
       } catch (error) {
+        console.error("Error fetching user posts:", error);
         setError("Error fetching posts");
       } finally {
         setLoading(false);
@@ -67,8 +82,8 @@ const MyPosts = () => {
         </div>
       ) : (
         <div className="space-y-6">
-          {posts.map((post, index) => (
-            <PostProfile key={index} post={post} />
+          {posts.map((post) => (
+            <PostProfile key={post._id || `post-${post.id}`} post={post} />
           ))}
         </div>
       )}
