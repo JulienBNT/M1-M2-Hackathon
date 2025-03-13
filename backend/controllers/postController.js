@@ -70,7 +70,7 @@ const getAllPostsByUser = async (req, res) => {
   try {
     const posts = await Post.find({ author: req.params.userId }).populate(
       "author",
-      "username firstname lastname profileImage",
+      "username firstname lastname profilePicture",
     );
 
     res.status(200).json(posts);
@@ -99,14 +99,6 @@ const modifyPost = async (req, res) => {
     res.status(200).json(post);
   } catch (error) {
     res.status(400).json({ error: 'Error updating post' });
-  }
-};
-    post.content = content;
-    await post.save();
-
-    res.status(200).json(post);
-  } catch (error) {
-    res.status(400).json({ error: "Error updating post" });
   }
 };
 
