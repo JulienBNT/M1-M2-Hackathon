@@ -39,35 +39,6 @@ function Home() {
     }
   };
 
-  const handleAddComment = (postIndex, commentText) => {
-    const updatedPosts = [...posts];
-    if (!updatedPosts[postIndex].comments) {
-      updatedPosts[postIndex].comments = [];
-    }
-
-    updatedPosts[postIndex].comments.push({
-      username: currentUser.username,
-      text: commentText,
-      likes: 0,
-      replies: [],
-    });
-    setPosts(updatedPosts);
-  };
-
-  const handleReplyComment = (postIndex, commentIndex, replyText) => {
-    const updatedPosts = [...posts];
-    if (!updatedPosts[postIndex].comments[commentIndex].replies) {
-      updatedPosts[postIndex].comments[commentIndex].replies = [];
-    }
-
-    updatedPosts[postIndex].comments[commentIndex].replies.push({
-      username: currentUser.username,
-      text: replyText,
-      likes: 0,
-    });
-    setPosts(updatedPosts);
-  };
-
   const toggleComments = (postIndex) => {
     const updatedShowComments = [...showComments];
     updatedShowComments[postIndex] = !updatedShowComments[postIndex];
@@ -81,7 +52,7 @@ function Home() {
       <div className="w-full space-y-4">
         {isLoading && posts.length === 0 ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-800 mx-auto"></div>
           </div>
         ) : posts.length > 0 ? (
           posts.map((post, index) => (
@@ -91,12 +62,6 @@ function Home() {
                 ...post,
                 text: post.content,
               }}
-              onAddComment={(commentText) =>
-                handleAddComment(index, commentText)
-              }
-              onReplyComment={(commentIndex, replyText) =>
-                handleReplyComment(index, commentIndex, replyText)
-              }
               showCommentsState={showComments[index]}
               onToggleComments={() => toggleComments(index)}
             />
